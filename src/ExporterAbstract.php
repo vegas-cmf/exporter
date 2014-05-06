@@ -23,9 +23,9 @@ abstract class ExporterAbstract
     /**
      * Abstract init, inside should be created stdClass object 
      * @param array $data set of data to export
-     * @param type $mongo if we are going to use mongo db set this var to true
+     * @param type $keysAsHeaders if we are going to use mongo db set this var to true
      */
-    abstract function init(array $data, $mongo = false);
+    abstract function init(array $data, $keysAsHeaders = false);
     
     /**
      * It sets header row for output data
