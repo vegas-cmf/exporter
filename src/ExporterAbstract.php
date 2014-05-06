@@ -1,9 +1,10 @@
 <?php 
 
-abstract class ExporterAbstract {
+abstract class ExporterAbstract 
+{
 
     /**
-     *  Contans std object with content properties:
+     * Contans std object with content properties:
      *  - contentType
      *  - contentSize
      *  - filename
@@ -13,22 +14,21 @@ abstract class ExporterAbstract {
     protected $properties;
     
     /**
-     *  Contains file path 
+     * Contains file path 
      * @var String
      *  
      */
     protected $outputPath = null;
     
     /**
-     *  Abstract init, inside should be created stdClass object 
+     * Abstract init, inside should be created stdClass object 
      * @param array $data set of data to export
      * @param type $keysAsHeaders if we are going to use mongo db set this var to true
      */
     abstract function init(array $data, $keysAsHeaders = false);
     
-    
     /**
-     *  It sets header row for output data
+     * It sets header row for output data
      * @param array $headers data with header
      */
     abstract function setHeaders(array $headers);
@@ -37,7 +37,7 @@ abstract class ExporterAbstract {
      * @param string $filename Name of file, override with default set value
      */
     abstract function export($filename);
-    
+        
     /**
      * It returns content that should be exported
      */
@@ -48,8 +48,8 @@ abstract class ExporterAbstract {
      */
     function download()
     {
-        header('Content-Type: '. $this->properties->contentType);
-        header('Content-Disposition: attachment; filename='.$this->properties->filename);
+        header('Content-Type: ' . $this->properties->contentType);
+        header('Content-Disposition: attachment; filename=' . $this->properties->filename);
         header('Content-Length: ' . $this->properties->contentSize);
         
         echo $this->getContent();
@@ -57,7 +57,7 @@ abstract class ExporterAbstract {
     }
     
     /**
-     *  Setter
+     * Setter
      * @param String $path
      */
     function setOutputPath($path)
@@ -66,5 +66,4 @@ abstract class ExporterAbstract {
     }
 
 }
-
 
