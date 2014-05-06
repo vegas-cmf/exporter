@@ -33,10 +33,19 @@ abstract class ExporterAbstract
      */
     abstract function setHeaders(array $headers);
     
+    /**
+     * @param string $filename Name of file, override with default set value
+     */
     abstract function export($filename);
-    
+        
+    /**
+     * It returns content that should be exported
+     */
     abstract function getContent();
     
+    /**
+     * Download function. Sets a few header, and print content
+     */
     function download()
     {
         header('Content-Type: ' . $this->properties->contentType);
@@ -47,6 +56,10 @@ abstract class ExporterAbstract
         exit;        
     }
     
+    /**
+     * Setter
+     * @param String $path
+     */
     function setOutputPath($path)
     {
         $this->outputPath = $path;
@@ -54,7 +67,3 @@ abstract class ExporterAbstract
 
 }
 
-    /**
-     * Setter
-     * @param String $path
-     */
