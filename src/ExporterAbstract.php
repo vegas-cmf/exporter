@@ -1,50 +1,96 @@
 <?php 
 
+namespace Vegas\Exporter;
+
+use \Vegas\Exporter\Exception as ExporterException;
+
 abstract class ExporterAbstract 
 {
-
     /**
-     * Contans std object with content properties:
+     * Object with following properties:
      *  - contentType
      *  - contentSize
      *  - filename
+     * 
      * @var StdClass
-     *  
      */
     protected $properties;
     
     /**
-     * Contains file path 
+     * Output file path.
+     * 
      * @var String
-     *  
      */
     protected $outputPath = null;
     
     /**
-     * Abstract init, inside should be created stdClass object 
+     * Data headers to use in export.
+     * 
+     * @var array
+     */
+    protected $headers = array();
+    
+    /**
+     * Sets header rows for output data.
+     * It must be used before init in order to work.
+     * 
+     * @param array $headers data with header
+     */
+    public function setHeaders(array $headers)
+    {
+        if (empty($headers))
+        {
+            throw new ExporterException('Data headers cannot be empty');
+        }
+        
+        $this->headers = array_values($headers);
+    }
+    
+    /**
+     * Initializes data object for export.
+     * It must set up properties object as well.
+     * 
      * @param array $data set of data to export
-     * @param type $keysAsHeaders if we are going to use mongo db set this var to true
+     * @param type $keysAsHeaders uses array keys as headers for export data
      */
     abstract function init(array $data, $keysAsHeaders = false);
     
     /**
-     * It sets header row for output data
-     * @param array $headers data with header
-     */
-    abstract function setHeaders(array $headers);
-    
-    /**
-     * @param string $filename Name of file, override with default set value
-     */
-    abstract function export($filename);
-        
-    /**
-     * It returns content that should be exported
+     * Returns exported output file content.
      */
     abstract function getContent();
     
     /**
-     * Download function. Sets a few header, and print content
+     * Executes data export.
+     * 
+     * @param string $filename Download file name
+     */
+    abstract function exportData($filename);
+    
+    /**
+     * @param String $path
+     */
+    function setOutputPath($path)
+    {
+        $this->outputPath = $path;
+    }
+        
+    /**
+     * Exports data into file if output path was set.
+     * Forces file download otherwise.
+     * 
+     * @param string $filename Download file name
+     */
+    public function export($filename)
+    {
+        if (empty($this->outputPath))
+            $this->download();
+        else
+            $this->exportData($filename);
+    }
+    
+    /**
+     * Exports file download.
      */
     function download()
     {
@@ -55,15 +101,5 @@ abstract class ExporterAbstract
         echo $this->getContent();
         exit;        
     }
-    
-    /**
-     * Setter
-     * @param String $path
-     */
-    function setOutputPath($path)
-    {
-        $this->outputPath = $path;
-    }
-
 }
 
