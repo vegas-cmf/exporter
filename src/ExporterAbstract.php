@@ -26,10 +26,6 @@ abstract class ExporterAbstract
      * @param type $keysAsHeaders if we are going to use mongo db set this var to true
      */
     abstract function init(array $data, $keysAsHeaders = false);
-<<<<<<< HEAD
-=======
-    
->>>>>>> master
     
     /**
      * It sets header row for output data
