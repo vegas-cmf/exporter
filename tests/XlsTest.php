@@ -22,7 +22,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @dataProvider getRecordProvider
+     * @dataProvider getRecordWithoutKeysProvider
      * @param string $export_data
      */
     public function testSaveWithoutHeader($export_data) 
@@ -30,6 +30,25 @@ class XlsTest extends \PHPUnit_Framework_TestCase {
         $filename = 'test.xls';
         $xls = new Xls();
         $xls->init($export_data);
+        $xls->exportData($filename);
+
+        $reader = new \PHPExcel_Reader_Excel2007();
+        
+        $this->assertInstanceOf('PHPExcel', $xls->getContent());
+        $this->assertInstanceOf('PHPExcel', $reader->load($filename));
+
+    }
+
+    /**
+     * @dataProvider getRecordProvider
+     * @param string $export_data
+     */
+    public function testSaveWithHeader($export_data) 
+    {
+        $filename = 'test.xls';
+        $xls = new Xls();
+        $xls->init($export_data);
+        $xls->setHeaders($this->getHeaders());
         $xls->exportData($filename);
 
         $reader = new \PHPExcel_Reader_Excel2007();
@@ -47,36 +66,9 @@ class XlsTest extends \PHPUnit_Framework_TestCase {
     public function testHeaders($export_data) 
     {
         $xls = new Xls();        
-        $xls->init(array($export_data), false);        
+        $xls->init($export_data, false);        
         $this->assertFalse($xls->getKeysAsHeaders());
 
-    }
-
-
-    public function getRecordProvider() 
-    {
-        return array(
-            array(
-                array(
-                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
-                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
-                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
-                ) 
-            )
-        );
-    }
-    
-    
-
-    public function getRecordWithoutKeysProvider() 
-    {
-        return array(
-            array(
-                array("John", "Smith", "19"),
-                array("Paul", "Smith2", "36"),
-                array("Adam", "Smit3", "14"),
-            )
-        );
     }
 
     protected function tearDown() 
@@ -93,5 +85,38 @@ class XlsTest extends \PHPUnit_Framework_TestCase {
         }
 
     }
+
+    public function getRecordProvider() 
+    {
+        return array(
+            array(
+                array(
+                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
+                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
+                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
+                ) 
+            )
+        );
+    }
+    
+    public function getRecordWithoutKeysProvider() 
+    {
+        return array(
+            array(
+                array(
+                    array("John", "Smith", "19"),
+                    array("Paul", "Smith2", "36"),
+                    array("Adam", "Smit3", "14"),
+                )
+            )
+        );
+    }
+
+    public function getHeaders() 
+    {
+        return array('name', 'lastname', 'age');
+    }
+
+    
 
 }
