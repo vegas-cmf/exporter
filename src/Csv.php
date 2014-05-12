@@ -4,7 +4,7 @@ namespace Vegas\Exporter;
 
 use Vegas\Exporter\Exception as ExporterException;
 
-class Xls extends ExporterAbstract {
+class Csv extends ExporterAbstract {
     
     /**
      * Holds data for exportData function
