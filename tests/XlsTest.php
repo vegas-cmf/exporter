@@ -22,7 +22,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @dataProvider getRecordWithoutKeysProvider
+     * @dataProvider getRecordProvider
      * @param string $export_data
      */
     public function testSaveWithoutHeader($export_data) 
@@ -40,14 +40,14 @@ class XlsTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @dataProvider getRecordProvider
+     * @dataProvider getRecordWithoutKeysProvider
      * @param string $export_data
      */
     public function testSaveWithHeader($export_data) 
     {
         $filename = 'test.xls';
         $xls = new Xls();
-        $xls->init($export_data);
+        $xls->init($export_data, false);
         $xls->setHeaders($this->getHeaders());
         $xls->exportData($filename);
 
