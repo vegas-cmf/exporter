@@ -25,7 +25,10 @@ class Xml extends ExporterAbstract {
     public $keysAsHeaders;
         
     /**
-     * Sets data and create properties object
+     * Sets data and create properties object (stdClass). If keysAsHeaders are set to true, 
+     * your data variable has to have header values in keys of each element. In 
+     * other case, when keysAsHeaders are set to false you have to give a header 
+     * value through setHeaders 
      * @param array $data
      * @param boolean $keysAsHeaders
      * @throws ExporterException

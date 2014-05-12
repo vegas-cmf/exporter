@@ -22,16 +22,15 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @dataProvider getRecordProvider
+     * @dataProvider getOneRecordProvider
      * @param string $name
      * @param string $lastname
      * @param string $age
      */
     public function testEncodingXml($name, $lastname, $age) 
     {
-
         $xml = new Xml();
-        $xml->init(array($name, $lastname, $age));
+        $xml->init(array(array($name, $lastname, $age)));
         $xml->exportData('test.xml');
 
         $this->assertSame(file_get_contents('test.xml'), $xml->getContent());
@@ -41,14 +40,14 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
      * @dataProvider getRecordProvider
      * @param string $export_data
      */
-    public function testXmlCreateWithKeysHeaders($export_data) 
+    public function testXmlCreateWithoutKeysHeaders($export_data) 
     {
         $filename = 'test.xml';
         $xml = new Xml();
-        $xml->init(array($export_data));
+        $xml->init($export_data, true);
         $xml->exportData($filename);
 
-        $this->assertSame($this->primitiveXmlCreate(array($export_data)), file_get_contents($filename));
+        $this->assertSame($this->primitiveXmlCreate($export_data), file_get_contents($filename));
 
     }
 
@@ -56,15 +55,15 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
      * @dataProvider getRecordWithoutkeysProvider
      * @param string $export_data
      */
-    public function testXmlCreateWithoutKeysHeaders($export_data) 
+    public function testXmlCreateWithKeysHeaders($export_data) 
     {
         $filename = 'test.xml';
         $xml = new Xml();
-        $xml->init(array($export_data), false);
+        $xml->init($export_data, false);
         $xml->setHeaders(array('name', 'lastname', 'age'));
         $xml->exportData($filename);
 
-        $this->assertSame($this->primitiveXmlCreate(array($export_data), array('name', 'lastname', 'age')), file_get_contents($filename));
+        $this->assertSame($this->primitiveXmlCreate($export_data, array('name', 'lastname', 'age')), file_get_contents($filename));
 
     }
 
@@ -75,11 +74,19 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
     public function testXmlCreateEmptyHeader($export_data) 
     {
         $xml = new Xml();
-        $xml->init(array($export_data), false);
+        $xml->init($export_data, false);
         $this->assertFalse($xml->keysAsHeaders);
 
     }
 
+    protected function tearDown() 
+    {
+        parent::tearDown();
+
+        if (file_exists('test.xml')){
+            unlink('test.xml');
+        }
+    }
     
     private function primitiveXmlCreate($export_data, $keys = null) 
     {
@@ -88,7 +95,8 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         foreach ($export_data as $items) {
             $xml .='<item>';
             foreach ($items as $key => $value) {
-                if(is_null($keys)){
+                
+                if(!is_array($keys)){
                     $xml .= '<' . $key . '>' . $value . '</' . $key . '>';
                 } else {
                     $xml .= '<' . $keys[$key] . '>' . $value . '</' . $keys[$key] . '>';
@@ -100,40 +108,38 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $xml .= "</root>\n";
         return $xml;
     }
-    
-    
 
+    public function getOneRecordProvider() 
+    {
+        return array(
+            array('name' => "John", 'lastname' => "Smith", 'age' => "19")
+        );
+    }
+    
     public function getRecordProvider() 
     {
         return array(
             array(
-                array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
-                array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
-                array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
+                array(
+                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
+                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
+                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
+                )
             )
         );
     }
     
-    
-
     public function getRecordWithoutKeysProvider() 
     {
         return array(
             array(
-                array("John", "Smith", "19"),
-                array("Paul", "Smith2", "36"),
-                array("Adam", "Smit3", "14"),
+                array(
+                    array("John", "Smith", "19"),
+                    array("Paul", "Smith2", "36"),
+                    array("Adam", "Smit3", "14"),
+                )
             )
         );
-    }
-
-    protected function tearDown() 
-    {
-        parent::tearDown();
-
-        if (file_exists('test.xml')){
-            unlink('test.xml');
-        }
     }
 
 }
