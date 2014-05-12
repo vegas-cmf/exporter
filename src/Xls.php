@@ -24,6 +24,12 @@ class Xls extends ExporterAbstract {
      */
     private $keysAsHeaders;
         
+    /**
+     * Sets data and create properties object
+     * @param array $data
+     * @param boolean $keysAsHeaders
+     * @throws ExporterException
+     */
     public function init(array $data, $keysAsHeaders = true) 
     {
         if(is_null($data)){
@@ -41,26 +47,36 @@ class Xls extends ExporterAbstract {
                 
     }
     
-
+    /**
+     * Returns instance of PHPExcel
+     * @return PHPExcel
+     */
     public function getContent() 
     {
         return $this->content;
     }
-
+    
+    /**
+     * Returns state of headers
+     * @return PHPExcel
+     */
     public function getKeysAsHeaders() 
     {
         return $this->keysAsHeaders;
     }
 
+    /**
+     * Implementation of exportData function
+     * @param string $filename
+     * @throws ExporterException
+     */
     public function exportData($filename = "export_file.xls") 
-    {
-        
+    {        
         if($this->keysAsHeaders === false && is_null($this->headers)){
             throw new ExporterException("Headers cannot be empty if var keysAsHeaders was given in init function");
         }
         
         $this->properties->filename = $filename;
-        
         
         $this->content = new \PHPExcel();
         $this->content->setActiveSheetIndex(0);
@@ -70,8 +86,12 @@ class Xls extends ExporterAbstract {
         
     }
     
-    public function initExcelValues(){
-        
+    /**
+     * Generates worksheet for xls file. In addition, it saves temporary our 
+     * file to get content length. It's necessary to download file.
+     */
+    public function initExcelValues()
+    {        
         $i = 1;
         $sheet = $this->content->getActiveSheet();
 
@@ -82,7 +102,7 @@ class Xls extends ExporterAbstract {
         foreach($this->data as $item){
             
             $column = 'A';
-            foreach($item as $key => $value){
+            foreach($item as $value){
                 $sheet->getCell($column.$i)->setValue($value);
                 $column++;
             }
@@ -90,7 +110,7 @@ class Xls extends ExporterAbstract {
             $i++;
             
         }
-        $temporary_file = $this->outputPath."xls";
+        $temporary_file = $this->outputPath . "test.xls";
         $writer = new \PHPExcel_Writer_Excel2007($this->content);
         $writer->save($temporary_file);
         
@@ -99,10 +119,14 @@ class Xls extends ExporterAbstract {
                 
     }
     
-    public function saveExcel($filename){
-        
+    /**
+     * Saving excel file
+     * @param string $filename
+     */
+    public function saveExcel($filename)
+    {        
         $writer = new \PHPExcel_Writer_Excel2007($this->content);
-        $writer->save($this->outputPath.$filename);
+        $writer->save($this->outputPath . $filename);
         
     }
     
