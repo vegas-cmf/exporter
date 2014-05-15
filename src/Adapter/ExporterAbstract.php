@@ -12,7 +12,8 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use \Vegas\Exporter\Exception as ExporterException;
+use Vegas\Exporter\Adapter\Exception\OutputPathNotWritableException;
+use Vegas\Exporter\Adapter\Exception\EmptyHeadersException;
 
 abstract class ExporterAbstract
 {
@@ -50,7 +51,7 @@ abstract class ExporterAbstract
     {
         if (empty($headers))
         {
-            throw new ExporterException('Data headers cannot be empty');
+            throw new EmptyHeadersException();
         }
         
         $this->headers = array_values($headers);
@@ -83,7 +84,7 @@ abstract class ExporterAbstract
     public function setOutputPath($path)
     {
         if(!is_writable($path)){
-             throw new ExporterException("Output path: $path is not writable");
+             throw new OutputPathNotWritableException();
         }
         $this->outputPath = $path;
     }
