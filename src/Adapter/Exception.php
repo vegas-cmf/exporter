@@ -10,11 +10,11 @@
  * file that was distributed with this source code. * 
  */
 
-namespace Vegas\Exporter\Adapter\Exception;
+namespace Vegas\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\AdapterException as AdapterException;
+use Vegas\Exception as VegasException;
 
-class XmlException extends AdapterException
+class Exception extends VegasException
 {
-    protected $message = 'Vegas Exporter Xml Adapter Exception';
+    protected $message = 'Vegas Exporter Exception';
 }

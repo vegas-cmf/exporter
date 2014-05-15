@@ -12,7 +12,8 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\Exception\XmlException as XmlException;
+use Vegas\Exporter\Adapter\Exception\DataNotFoundException;
+use Vegas\Exporter\Adapter\Exception\EmptyHeadersException;
 
 class Xml extends ExporterAbstract {
     
@@ -49,7 +50,7 @@ class Xml extends ExporterAbstract {
     public function init(array $data, $keysAsHeaders = true)
     {
         if($data == array()){
-            throw new XmlException("Data cannot be empty");
+            throw new DataNotFoundException();
         }
 
         $this->obj = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><root></root>');
@@ -60,9 +61,12 @@ class Xml extends ExporterAbstract {
             
             foreach($items as $key => $item){
                 
-                if($keysAsHeaders){            
+                if($keysAsHeaders){
                     $parent->addChild($key, $item);            
                 } else {                    
+                    if(!$this->headers){
+                        throw new EmptyHeadersException();
+                    }
                     $parent->addChild($this->headers[$key], $item);                    
                 }
             

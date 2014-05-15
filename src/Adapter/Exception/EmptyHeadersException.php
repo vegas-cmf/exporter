@@ -10,11 +10,11 @@
  * file that was distributed with this source code. * 
  */
 
-namespace Vegas\Exporter\Adapter;
+namespace Vegas\Exporter\Adapter\Exception;
 
-use Vegas\Exporter\Exception as ExporterException;
+use Vegas\Exporter\Adapter\Exception;
 
-class AdapterException extends ExporterException
+class EmptyHeadersException extends Exception
 {
-    protected $message = 'Vegas Exporter Adapter Exception';
+    protected $message = 'Headers are empty';
 }

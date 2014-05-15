@@ -66,7 +66,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
     
     public function testXmlInitWithoutData()
     {
-        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\XmlException');
+        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\DataNotFoundException');
         $this->obj->init(array());
 
     } 
