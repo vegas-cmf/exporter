@@ -1,6 +1,6 @@
 <?php
 
-namespace Vegas\Exporter;
+namespace Vegas\Exporter\Adapter;
 
 use Vegas\Exception as VegasException;
 

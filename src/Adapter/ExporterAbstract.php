@@ -1,10 +1,21 @@
 <?php 
 
-namespace Vegas\Exporter;
+/**
+ * This file is part of Vegas Exporter package.
+ *
+ * @author Mateusz Aniołek <matty201@gmail.com>
+ * @copyright Amsterdam Standard Sp. Z o.o.
+ * 
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code. * 
+ */
 
-use \Vegas\Exporter\Exception as ExporterException;
+namespace Vegas\Exporter\Adapter;
 
-abstract class ExporterAbstract 
+use Vegas\Exporter\Adapter\Exception\OutputPathNotWritableException;
+use Vegas\Exporter\Adapter\Exception\EmptyHeadersException;
+
+abstract class ExporterAbstract
 {
     /**
      * Object with following properties:
@@ -14,7 +25,7 @@ abstract class ExporterAbstract
      * 
      * @var StdClass
      */
-    protected $properties;
+    protected $config;
     
     /**
      * Output file path.
@@ -40,7 +51,7 @@ abstract class ExporterAbstract
     {
         if (empty($headers))
         {
-            throw new ExporterException('Data headers cannot be empty');
+            throw new EmptyHeadersException();
         }
         
         $this->headers = array_values($headers);
@@ -53,25 +64,28 @@ abstract class ExporterAbstract
      * @param array $data set of data to export
      * @param type $keysAsHeaders uses array keys as headers for export data
      */
-    abstract function init(array $data, $keysAsHeaders = false);
+    abstract public function init(array $data, $keysAsHeaders = false);
     
     /**
      * Returns exported output file content.
      */
-    abstract function getContent();
+    abstract protected function getContent();
     
     /**
      * Executes data export.
      * 
      * @param string $filename Download file name
      */
-    abstract function exportData($filename);
+    abstract protected function exportFile($filename);
     
     /**
      * @param String $path
      */
-    function setOutputPath($path)
+    public function setOutputPath($path)
     {
+        if(!is_writable($path)){
+             throw new OutputPathNotWritableException();
+        }
         $this->outputPath = $path;
     }
         
@@ -83,20 +97,21 @@ abstract class ExporterAbstract
      */
     public function export($filename)
     {
-        if (empty($this->outputPath))
+        if (empty($this->outputPath)) {
             $this->download();
-        else
-            $this->exportData($filename);
+        } else {
+            $this->exportFile($filename);
+        }
     }
     
     /**
      * Exports file download.
      */
-    function download()
+    private function download()
     {
-        header('Content-Type: ' . $this->properties->contentType);
-        header('Content-Disposition: attachment; filename=' . $this->properties->filename);
-        header('Content-Length: ' . $this->properties->contentSize);
+        header('Content-Type: ' . $this->config->contentType);
+        header('Content-Disposition: attachment; filename=' . $this->config->filename);
+        header('Content-Length: ' . $this->config->contentSize);
         
         echo $this->getContent();
         exit;        
