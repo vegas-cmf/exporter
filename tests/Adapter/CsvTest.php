@@ -20,10 +20,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
 
 
     /**
-     * @dataProvider getRecordWithoutKeysProvider
+     * @dataProvider saveWithoutHeadersDataProvider
      * @param string $exportData
      */
-    public function testCsvExport($exportData) 
+    public function testCsvExport($exportData)
     {
         $this->obj->setHeaders(array('name','lastname','age'));
         $this->obj->init($exportData, true);
@@ -37,10 +37,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @dataProvider getRecordWithoutKeysProvider
+     * @dataProvider saveWithoutHeadersDataProvider
      * @param string $exportData
      */
-    public function testCsvSaveWithoutHeaders($exportData) 
+    public function testCsvSaveWithoutHeaders($exportData)
     {
         $filename = 'test.csv';
         $this->obj->setOutputPath("/tmp/");
@@ -52,15 +52,27 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
         $this->assertSame($this->csv_string, file_get_contents("/tmp/" . $filename));
 
     }
-    
-    public function testCsvInit() 
+    public function saveWithoutHeadersDataProvider()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\CsvException');
+        return array(
+            array(
+                array(
+                    array("John", "Smith", "19"),
+                    array("Paul", "Smith2", "36"),
+                    array("Adam", "Smit3", "14"),
+                )
+            )
+        );
+    }
+    
+    public function testCsvInit()
+    {
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
         $this->obj->init(array(), false);        
 
     }
     
-    public function testCsvObjVar() 
+    public function testCsvObjVar()
     {
         $class = new \ReflectionClass("Vegas\Exporter\Adapter\Csv");
         $property = $class->getProperty("obj");
@@ -71,39 +83,21 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
         $temp = new Csv();
         $temp->init($exportData, false);
         $this->assertTrue(is_string($property->getValue($temp)));
+        
     }
     
     /**
-     * @dataProvider getRecordProvider
+     * @dataProvider noHeadersDataProvider
      * @param type $exportData
      */
-    public function testCsvNoHeaders($exportData) 
+    public function testCsvNoHeaders($exportData)
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\CsvException');
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\EmptyHeadersException');
         $this->obj->init($exportData, true);        
 
     }
-
-    protected function setUp() {
-        $this->obj = new Csv();
-    }
     
-    protected function tearDown() 
-    {
-        $this->obj = null;
-        
-//        $files = array('test.csv');
-//        
-//        foreach($files as $value){
-//            if (file_exists($value)){
-//                unlink($value);
-//            }
-//
-//        }
-
-    }
-
-    public function getRecordProvider() 
+    public function noHeadersDataProvider()
     {
         return array(
             array(
@@ -115,25 +109,20 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
             )
         );
     }
-    
-    public function getHeader() 
+
+    protected function setUp()
     {
-        return array('name', 'lastname', 'age');
+        $this->obj = new Csv();
     }
     
-   
-
-    public function getRecordWithoutKeysProvider() 
+    protected function tearDown()
     {
-        return array(
-            array(
-                array(
-                    array("John", "Smith", "19"),
-                    array("Paul", "Smith2", "36"),
-                    array("Adam", "Smit3", "14"),
-                )
-            )
-        );
+        $this->obj = null;
+
+        if (file_exists('test.csv')){
+            unlink('test.csv');
+        }
+
     }
 
 }

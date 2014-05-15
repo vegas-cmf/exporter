@@ -12,7 +12,8 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\Exception\CsvException as CsvException;
+use Vegas\Exporter\Adapter\Exception\DataNotFoundException as DataNotFoundException;
+use Vegas\Exporter\Adapter\Exception\EmptyHeadersException as EmptyHeadersException;
 
 class Csv extends ExporterAbstract {
     
@@ -62,7 +63,7 @@ class Csv extends ExporterAbstract {
     public function init(array $data, $keysAsHeaders = true, $value_separator = ',', $nl_separator = ';')
     {
         if($data == array()){
-            throw new CsvException('Data cannot be empty');
+            throw new DataNotFoundException();
         }
               
         $this->value_separator = $value_separator;
@@ -71,7 +72,7 @@ class Csv extends ExporterAbstract {
         if($keysAsHeaders === true){
             
             if($this->headers == array()){
-                throw new CsvException('Headers cannot be empty, if $keysAsHeaders was given');
+                throw new EmptyHeadersException();
             }
             
             foreach($this->headers as $key){
