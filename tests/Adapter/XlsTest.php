@@ -79,12 +79,12 @@ class XlsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @dataProvider saveWithoutHeaderDataProvider
+     * @dataProvider saveWithHeaderDataProvider
      * @param string $exportData
      */
-    public function testHeaders($exportData) 
+    public function testInvalidKeys($exportData)
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\EmptyHeadersException');
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidKeysException');
         $this->obj->init($exportData, true);        
 
     }

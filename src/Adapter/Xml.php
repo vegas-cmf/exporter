@@ -53,6 +53,14 @@ class Xml extends ExporterAbstract {
             throw new DataNotFoundException();
         }
 
+        if($keysAsHeaders === true){
+            $keys = array_keys($data);
+            if(!is_array($keys)){
+                throw new EmptyKeysException();
+            }
+            $this->setHeaders(array_keys($data));
+        }
+        
         $this->obj = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><root></root>');
         
         foreach($data as $items){

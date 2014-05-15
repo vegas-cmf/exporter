@@ -13,7 +13,7 @@
 namespace Vegas\Exporter\Adapter;
 
 use Vegas\Exporter\Adapter\Exception\DataNotFoundException as DataNotFoundException;
-use Vegas\Exporter\Adapter\Exception\EmptyHeadersException as EmptyHeadersException;
+use Vegas\Exporter\Adapter\Exception\InvalidKeysException as InvalidKeysException;
 
 class Csv extends ExporterAbstract {
     
@@ -38,7 +38,8 @@ class Csv extends ExporterAbstract {
      /**
      * Constructor. Initialize $config variable as instance of stdClass. First 
      * of all, contentSize and fileName are set as null and contentType is set to 
-     * 'text/csv' so it points that exported file should be string type
+     * 'text/csv' so it points that exported file should be string type. Also 
+      * sets default separators. For new line - ';', and for next value - ','.
      */
     public function __construct()
     {                        
@@ -46,6 +47,10 @@ class Csv extends ExporterAbstract {
         $this->config->contentSize = null;
         $this->config->contentType = 'text/csv';
         $this->config->filename = null;
+        
+        $this->nl_separator = ";";
+        $this->value_separator = ",";
+        
     }
 
     /**
@@ -60,21 +65,22 @@ class Csv extends ExporterAbstract {
      * @param char $nl_separator new line separator 
      * @throws ExporterException
      */
-    public function init(array $data, $keysAsHeaders = true, $value_separator = ',', $nl_separator = ';')
+    public function init(array $data, $keysAsHeaders = true)
     {
         if($data == array()){
             throw new DataNotFoundException();
         }
-              
-        $this->value_separator = $value_separator;
-        $this->nl_separator = $nl_separator;
 
         if($keysAsHeaders === true){
-            
-            if($this->headers == array()){
-                throw new EmptyHeadersException();
+            $keys = array_keys($data);
+            if(is_numeric($keys[0])){
+                throw new InvalidKeysException();
             }
+            $this->setHeaders($keys);
             
+        } 
+        
+        if($this->headers != array()){
             foreach($this->headers as $key){
                  $this->obj .= $key . $this->value_separator;
             }
@@ -94,6 +100,25 @@ class Csv extends ExporterAbstract {
         
         $this->config->contentSize = strlen($this->obj);
                 
+    }
+    
+    /**
+     * Sets separator for new line/row
+     * 
+     * @param char $separator
+     */
+    public function setNewLineSeparator($separator)
+    {
+        $this->nl_separator = $separator;
+    }
+    
+    /**
+     * Sets separator for value/new column
+     * @param char $separator
+     */
+    public function setValueSeparator($separator)
+    {
+        $this->value_separator = $separator;
     }
     
     /**

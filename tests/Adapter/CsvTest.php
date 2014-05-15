@@ -26,7 +26,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
     public function testCsvExport($exportData)
     {
         $this->obj->setHeaders(array('name','lastname','age'));
-        $this->obj->init($exportData, true);
+        $this->obj->init($exportData, false);
         $this->obj->setOutputPath("/tmp/");
         $this->obj->export('test.csv');
 
@@ -87,27 +87,30 @@ class CsvTest extends \PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @dataProvider noHeadersDataProvider
      * @param type $exportData
      */
-    public function testCsvNoHeaders($exportData)
+    public function testCsvNoKeys()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\EmptyHeadersException');
-        $this->obj->init($exportData, true);        
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidKeysException');
+        $this->obj->init(array(array()), true);        
 
     }
     
     public function noHeadersDataProvider()
     {
         return array(
-            array(
-                array(
-                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
-                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
-                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
-                ) 
-            )
+            
         );
+        
+//        return array(
+//            array(
+//                array(
+//                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
+//                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
+//                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
+//                ) 
+//            )
+//        );
     }
 
     protected function setUp()

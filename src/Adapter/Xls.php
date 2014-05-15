@@ -15,7 +15,7 @@ namespace Vegas\Exporter\Adapter;
 use Vegas\Exporter\Exception as ExporterException;
 
 use Vegas\Exporter\Adapter\Exception\DataNotFoundException as DataNotFoundException;
-use Vegas\Exporter\Adapter\Exception\EmptyHeadersException as EmptyHeadersException;
+use Vegas\Exporter\Adapter\Exception\InvalidKeysException as InvalidKeysException;
 
 class Xls extends ExporterAbstract
 {
@@ -72,11 +72,14 @@ class Xls extends ExporterAbstract
         
         $i = 1;
         $sheet = $this->obj->getActiveSheet();
-
-        if($keysAsHeaders){
-            if($this->headers == array()){
-                throw new EmptyHeadersException();
+        
+        if($keysAsHeaders === true){
+            $keys = array_keys($data);
+            if(is_numeric($keys[0])){
+                throw new InvalidKeysException();
             }
+            $this->setHeaders(array_keys($data));
+            
             array_unshift($data, $this->headers);
         }
         
