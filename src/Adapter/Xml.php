@@ -12,9 +12,6 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\Exception\DataNotFoundException;
-use Vegas\Exporter\Adapter\Exception\EmptyHeadersException;
-
 class Xml extends ExporterAbstract {
     
     /**
@@ -22,23 +19,21 @@ class Xml extends ExporterAbstract {
      * 
      * @var SimpleXMLElement 
      */
-    private $obj;
-            
+    private $xml;
+    
     /**
-     * Constructor. Initialize $config variable as instance of stdClass. First 
-     * of all, contentSize and fileName are set as null and contentType is set to 
+     * Constructor. Initialize $config variable as instance of stdClass. First
+     * of all, contentSize and fileName are set as null and contentType is set to
      * 'application/xml' so it points that exported file should be xml type
      */
     public function __construct()
     {
-        $this->config = new \stdClass();
-        $this->config->contentSize = null;
-        $this->config->contentType = 'application/xml';
-        $this->config->fileName = null;
+        $this->contentType = 'application/xml';
+        $this->fileName = 'export_file.xml';
     }
     
     /**
-     * Sets data and create config object (stdClass). If keysAsHeaders are set to true, 
+     * Sets data and create config object (stdClass). If keysAsHeaders are set to true,
      * your data variable has to have header values in keys of each element. In 
      * other case, when keysAsHeaders are set to false you have to give a header 
      * value through setHeaders 
@@ -50,67 +45,62 @@ class Xml extends ExporterAbstract {
     public function init(array $data, $keysAsHeaders = true)
     {
         if($data == array()){
-            throw new DataNotFoundException();
+            throw new Exception\DataNotFoundException();
         }
 
         if($keysAsHeaders === true){
             $keys = array_keys($data);
             if(!is_array($keys)){
-                throw new EmptyKeysException();
+                throw new Exception\EmptyKeysException();
             }
             $this->setHeaders(array_keys($data));
         }
         
-        $this->obj = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><root></root>');
+        $this->xml = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><root></root>');
         
         foreach($data as $items){
             
-            $parent = $this->obj->addChild('item');
+            $parent = $this->xml->addChild('item');
             
             foreach($items as $key => $item){
                 
                 if($keysAsHeaders){
-                    $parent->addChild($key, $item);            
-                } else {                    
+                    $parent->addChild($key, $item);
+                } else {      
                     if(!$this->headers){
-                        throw new EmptyHeadersException();
+                        throw new Exception\EmptyHeadersException();
                     }
-                    $parent->addChild($this->headers[$key], $item);                    
+                    $parent->addChild($this->headers[$key], $item);
                 }
             
             }
             
         }
         
-        $this->config->contentSize = strlen($this->obj->asXML());
+        $this->contentSize = strlen($this->xml->asXML());
         
     }
     
     /**
-     * Returns generated XML as string
-     * 
-     * @return string
-     */
-    public function getContent()
-    {
-        return $this->obj->asXML();
-    }
-    
-    /**
-     * Override abstract function from parent. It sets filename to previously 
+     * Override abstract function from parent. It sets filename to previously
      * set up instance of stdClass, and use private method saveXml()
      * 
      * @param string $fileName
      * @throws ExporterException
      */
-    protected function exportFile($fileName = 'export_file.xml')
+    protected function exportFile()
     {
-        $this->config->fileName = $fileName;
-        
-        $this->obj->asXML($this->outputPath . $fileName);
+        $this->xml->asXML($this->outputPath . $this->fileName);
         
     }
     
-    
-
+    /**
+     * Sends generated XML into to a browser.
+     */
+    public function download()
+    {
+        $this->setDownloadHttpHeaders();
+        
+        echo $this->xml->asXML();
+    }
 }

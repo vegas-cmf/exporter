@@ -18,8 +18,7 @@ use Vegas\Exporter\Adapter\Exception\DataNotFoundException as DataNotFoundExcept
 use Vegas\Exporter\Adapter\Exception\InvalidKeysException as InvalidKeysException;
 
 class Xls extends ExporterAbstract
-{
-    
+{    
     /**
      * Holds data for exportData function
      * @var array 
@@ -30,25 +29,19 @@ class Xls extends ExporterAbstract
      * Variable contains PHPExcel object 
      * @var PHPExcel 
      */
-    private $obj;
+    private $xls;
     
     /**
      * Constructor. Initialize $config variable as instance of stdClass. First 
      * of all, contentSize and fileName are set as null and contentType is set to 
      * 'application/vnd.ms-excel' so it points that exported file should be xls type.
-     * Initialize $obj variable as instance of PHPExcel() and sets active sheet 
+     * Initialize $xls variable as instance of PHPExcel() and sets active sheet 
      * index to 0
      */
     public function __construct()
     {
-        $this->config = new \stdClass();
-        $this->config->contentSize = null;
-        $this->config->contentType = 'application/vnd.ms-excel';
-        $this->config->fileName = null;
-        
-        $this->obj = new \PHPExcel();
-        $this->obj->setActiveSheetIndex(0);
-        
+        $this->fileName = 'export_file.xls';
+        $this->contentType = 'application/vnd.ms-excel';
     }
 
     /**
@@ -61,17 +54,20 @@ class Xls extends ExporterAbstract
      * file to get content length. It's necessary to download file.
      * 
      * @param array $data
-     * @param boolean $keysAsHeaders
+     * @param boolean $keysAsHeaders default false
      * @throws ExporterException
      */
-    public function init(array $data, $keysAsHeaders = true)
+    public function init(array $data, $keysAsHeaders = false)
     {
         if($data == array()){
             throw new DataNotFoundException();
         }
         
+        $this->xls = new \PHPExcel();
+        $this->xls->setActiveSheetIndex(0);
+        
         $i = 1;
-        $sheet = $this->obj->getActiveSheet();
+        $sheet = $this->xls->getActiveSheet();
         
         if($keysAsHeaders === true){
             $keys = array_keys($data);
@@ -87,7 +83,7 @@ class Xls extends ExporterAbstract
             
             $column = 'A';
             foreach($item as $value){
-                $sheet->getCell($column.$i)->setValue($value);
+                $sheet->getCell($column . $i)->setValue($value);
                 $column++;
             }
             
@@ -96,50 +92,35 @@ class Xls extends ExporterAbstract
         }
         
         $temporary_file = $this->outputPath . "test.xls";
-        $writer = new \PHPExcel_Writer_Excel2007($this->obj);
+        $writer = new \PHPExcel_Writer_Excel2007($this->xls);
         $writer->save($temporary_file);
         
-        $this->config->contentSize = filesize($temporary_file);
+        $this->contentSize = filesize($temporary_file);
         unlink($temporary_file);
                 
     }
     
-    /**
-     * Returns instance of PHPExcel
-     * @return PHPExcel
-     */
-    public function getContent()
-    {
-        return $this->obj;
-    }
-    
      /**
-     * Override abstract function from parent. It sets filename to previously 
+     * Override abstract function from parent. It sets fileName to previously
      * set up instance of stdClass, and use private method saveExcel()
      * 
      * @param array $data
      * @param boolean $keysAsHeaders
      * @throws XmlException
      */
-    public function exportFile($fileName = "export_file.xls")
-    {                
-        $this->config->fileName = $fileName;        
-        $this->saveExcel($fileName);
-        
-    }
-        
-    /**
-     * Save generated xls file
-     * 
-     * @param string $fileName
-     * @throws ExporterException
-     */
-    private function saveExcel($fileName)
-    {        
-        $writer = new \PHPExcel_Writer_Excel2007($this->obj);
-        $writer->save($this->outputPath . $fileName);
-        
+    public function exportFile()
+    {
+        $writer = new \PHPExcel_Writer_Excel2007($this->xls);
+        $writer->save($this->outputPath . $this->fileName);
     }
     
-
+    /**
+     * Sends generated XLS into to a browser.
+     */
+    public function download()
+    {
+        $this->setDownloadHttpHeaders();
+        
+        echo $this->obj();
+    }
 }

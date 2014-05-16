@@ -18,6 +18,20 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
 
     private $obj;
 
+    protected function setUp()
+    {
+        $this->obj = new Xml();
+    }
+
+    protected function tearDown()
+    {
+        $this->obj = null;
+
+        if (file_exists('test.xml')){
+            unlink('test.xml');
+        }
+    }
+    
     /**
      * @param string $name
      * @param string $lastname
@@ -33,7 +47,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $this->obj->setOutputPath("/tmp/");
         $this->obj->export($filename);
 
-        $this->assertSame(file_get_contents('/tmp/' . $filename), $this->obj->getContent());
+        $this->assertSame(file_get_contents('/tmp/' . $filename), file_get_contents('/tmp/test.xml'));
     }
     
     /**
@@ -77,7 +91,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $this->obj->init(array(array("John", "Smith", "19")));        
         
         $class = new \ReflectionClass("Vegas\Exporter\Adapter\Xml");
-        $property = $class->getProperty("obj");
+        $property = $class->getProperty("xml");
         $property->setAccessible(true);
         
         $exportData = array(array("John", "Smith", "19"));
@@ -137,19 +151,4 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $this->obj .= "</root>\n";
         return $this->obj;
     }
-    
-    protected function setUp()
-    {
-        $this->obj = new Xml();
-    }
-
-    protected function tearDown()
-    {
-        $this->obj = null;
-
-        if (file_exists('test.xml')){
-            unlink('test.xml');
-        }
-    }
-    
 }

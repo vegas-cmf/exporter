@@ -12,27 +12,27 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\Exception\OutputPathNotWritableException;
-use Vegas\Exporter\Adapter\Exception\EmptyHeadersException;
-
 abstract class ExporterAbstract
 {
     /**
-     * Object with following properties:
-     *  - contentType
-     *  - contentSize
-     *  - filename
-     * 
-     * @var StdClass
+     * @var string
      */
-    protected $config;
+    protected $contentType;
     
     /**
-     * Output file path.
-     * 
-     * @var String
+     * @var string
      */
-    protected $outputPath = null;
+    protected $contentSize;
+    
+    /**
+     * @var string
+     */
+    protected $outputPath;
+    
+    /**
+     * @var string
+     */
+    protected $fileName;
     
     /**
      * Data headers to use in export.
@@ -49,9 +49,8 @@ abstract class ExporterAbstract
      */
     public function setHeaders(array $headers)
     {
-        if (empty($headers))
-        {
-            throw new EmptyHeadersException();
+        if (empty($headers)) {
+            throw new Exception\EmptyHeadersException();
         }
         
         $this->headers = array_values($headers);
@@ -66,55 +65,69 @@ abstract class ExporterAbstract
      */
     abstract public function init(array $data, $keysAsHeaders = false);
     
-    /**
-     * Returns exported output file content.
-     */
-    abstract protected function getContent();
+    abstract protected function exportFile();
     
     /**
-     * Executes data export.
-     * 
-     * @param string $filename Download file name
+     * Exports file download.
      */
-    abstract protected function exportFile($filename);
+    abstract public function download();
     
     /**
      * @param String $path
      */
     public function setOutputPath($path)
     {
-        if(!is_writable($path)){
-             throw new OutputPathNotWritableException();
+        if (!is_writable($path)) {
+             throw new Exception\OutputPathNotWritableException();
         }
+        
         $this->outputPath = $path;
+    }
+    
+    /**
+     * Sets exported file name.
+     * 
+     * @param string $name
+     * @return \Vegas\Exporter\Adapter\Pdf
+     * @throws Exception\InvalidArgumentTypeException
+     */
+    public function setFileName($name)
+    {
+        if (!is_string($name)) {
+            throw new Exception\InvalidArgumentTypeException();
+        }
+        
+        return $this->fileName = $name;
     }
         
     /**
      * Exports data into file if output path was set.
      * Forces file download otherwise.
-     * 
-     * @param string $filename Download file name
      */
-    public function export($filename)
+    public function export()
     {
         if (empty($this->outputPath)) {
             $this->download();
         } else {
-            $this->exportFile($filename);
+            $this->exportFile();
         }
     }
     
     /**
-     * Exports file download.
+     * Sets HTTP headers for file download.
      */
-    private function download()
+    protected function setDownloadHttpHeaders()
     {
-        header('Content-Type: ' . $this->config->contentType);
-        header('Content-Disposition: attachment; filename=' . $this->config->filename);
-        header('Content-Length: ' . $this->config->contentSize);
+        if (!is_string($this->contentType) || !is_string($this->fileName)) {
+            throw new Exception\InvalidArgumentException();
+        }
         
-        echo $this->getContent();
-        exit;        
+        header('Content-Type: ' . $this->contentType);
+        header('Content-Disposition: attachment; filename=' . $this->fileName);
+        
+        if (!empty($this->contentSize)) {
+            header('Content-Length: ' . $this->contentSize);
+        }
     }
 }
 

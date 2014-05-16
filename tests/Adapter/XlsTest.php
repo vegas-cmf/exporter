@@ -17,91 +17,11 @@ use Vegas\Exporter\Adapter\Xls as Xls;
 
 class XlsTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var Xls
+     */
     private $obj;
     
-    /**
-     * @dataProvider saveWithHeaderDataProvider
-     * @param string $exportData
-     */
-    public function testSaveWithHeader($exportData)
-    {
-        $filename = 'test.xls';
-        $headers = array('name', 'lastname', 'age');
-        $this->obj->setHeaders($headers);
-        $this->obj->setOutputPath("/tmp/");
-        $this->obj->init($exportData, false);
-        $this->obj->export($filename);
-
-        $reader = new \PHPExcel_Reader_Excel2007();
-        
-        $this->assertInstanceOf('PHPExcel', $this->obj->getContent());
-        $this->assertInstanceOf('PHPExcel', $reader->load("/tmp/" . $filename));
-
-    }
-    
-    public function saveWithHeaderDataProvider() 
-    {
-        return array(
-            array(
-                array(
-                    array("John", "Smith", "19"),
-                    array("Paul", "Smith2", "36"),
-                    array("Adam", "Smit3", "14"),
-                )
-            )
-        );
-    }
-
-
-    /**
-     * @dataProvider saveWithoutHeaderDataProvider
-     * @param string $exportData
-     */
-    public function testSaveWithoutHeader($exportData)
-    {
-        $filename = 'test.xls';
-        $this->obj->setOutputPath("/tmp/");
-        $this->obj->init($exportData, false);
-        $this->obj->export($filename);
-
-        $reader = new \PHPExcel_Reader_Excel2007();
-        
-        $this->assertInstanceOf('PHPExcel', $this->obj->getContent());
-        $this->assertInstanceOf('PHPExcel', $reader->load("/tmp/" . $filename));
-
-    }
-
-    public function testXlsNoDataGiven() 
-    {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
-        $this->obj->init(array(), false);        
-
-    }
-
-    /**
-     * @dataProvider saveWithHeaderDataProvider
-     * @param string $exportData
-     */
-    public function testInvalidKeys($exportData)
-    {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidKeysException');
-        $this->obj->init($exportData, true);        
-
-    }
-    
-    public function saveWithoutHeaderDataProvider()
-    {
-        return array(
-            array(
-                array(
-                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
-                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
-                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
-                ) 
-            )
-        );
-    }
-
     protected function setUp()
     {
         date_default_timezone_set('Europe/Warsaw');
@@ -121,6 +41,70 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         }
 
     }
+    
+    public function testSaveWithHeader()
+    {
+        $fileName = 'test.xls';
+        $outputPath = '/tmp/';
+        $headers = array('name', 'lastname', 'age');
+        
+        $exportData = array(
+            array("John", "Smith", "19"),
+            array("Paul", "Smith2", "36"),
+            array("Adam", "Smit3", "14"),
+        );
+        
+        $this->obj->setHeaders($headers);
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->init($exportData);
+        $this->obj->export();
 
+        $this->assertFileExists($outputPath . $fileName);
+    }
 
+    /**
+     * @param string $exportData
+     */
+    public function testSaveWithoutHeader()
+    {
+        $exportData = array(
+            array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
+            array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
+            array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
+        );
+        
+        $fileName = 'test.xls';
+        $outputPath = '/tmp/';
+        
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        
+        $this->obj->init($exportData);
+        $this->obj->export();
+
+        $this->assertFileExists($outputPath . $fileName);
+    }
+
+    public function testXlsNoDataGiven() 
+    {
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
+        $this->obj->init(array(), false);        
+
+    }
+
+    public function testInvalidKeys()
+    {
+        $exportData = array(
+            array(
+                array("John", "Smith", "19"),
+                array("Paul", "Smith2", "36"),
+                array("Adam", "Smit3", "14"),
+            )
+        );
+                
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidKeysException');
+        $this->obj->init($exportData, true);        
+
+    }
 }
