@@ -16,5 +16,5 @@ use Vegas\Exporter\Adapter\Exception;
 
 class InvalidKeysException extends Exception
 {
-    protected $message = 'Given keys in array $data are invalid';
+    protected $message = 'Given array keys in are invalid';
 }

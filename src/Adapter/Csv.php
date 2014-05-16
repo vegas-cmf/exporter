@@ -11,7 +11,7 @@
 
 namespace Vegas\Exporter\Adapter;
 
-class Csv extends ExporterAbstract
+class Csv extends AdapterAbstract
 {    
     /**
      * @var string
@@ -40,19 +40,19 @@ class Csv extends ExporterAbstract
      * value through setHeaders.
      * 
      * @param array $data raw data, given in array
-     * @param boolean $keysAsHeaders headers in file state
+     * @param boolean $useKeysAsHeaders headers in file state
      * @param char $value_separator separator between values
      * @param char $nl_separator new line separator 
      * @throws ExporterException
      */
-    public function init(array $data, $keysAsHeaders = false)
+    public function init(array $data, $useKeysAsHeaders = false)
     {
         if($data == array()){
             throw new Exception\DataNotFoundException();
         }
 
-        if($keysAsHeaders){
-            $this->setHeaders(array_keys($data[0]));
+        if($useKeysAsHeaders){
+            $this->setHeaders(array_keys($data));
         } 
         
         if($this->headers != array()){
@@ -108,7 +108,7 @@ class Csv extends ExporterAbstract
     }
     
     /**
-     * Sends generated CSV into to a browser.
+     * Sends generated CSV into to the browser.
      */
     public function download()
     {

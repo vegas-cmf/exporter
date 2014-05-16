@@ -20,7 +20,8 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
 
     protected function setUp()
     {
-        $this->obj = new Xml();
+        $xml = new Xml();
+        $this->obj = new \Vegas\Exporter\Exporter($xml);
     }
 
     protected function tearDown()
@@ -42,10 +43,10 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $data = array(array("John", "Smith", "19"));
         $filename = 'test.xml';
         
-        $this->obj->init($data);
         $this->obj->setHeaders(array('name', 'lastname', 'age'));
         $this->obj->setOutputPath("/tmp/");
-        $this->obj->export($filename);
+        $this->obj->init($data);
+        $this->obj->run($filename);
 
         $this->assertSame(file_get_contents('/tmp/' . $filename), file_get_contents('/tmp/test.xml'));
     }
@@ -59,7 +60,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $filename = 'test.xml';
         $this->obj->init($exportData, true);
         $this->obj->setOutputPath("/tmp/");
-        $this->obj->export($filename);
+        $this->obj->run($filename);
 
         $this->assertSame(file_get_contents("/tmp/" . $filename), $this->primitiveXmlCreate($exportData));
 
@@ -84,23 +85,6 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $this->obj->init(array());
 
     } 
-    
-    public function testXmlInitObjSet()
-    {
-        
-        $this->obj->init(array(array("John", "Smith", "19")));        
-        
-        $class = new \ReflectionClass("Vegas\Exporter\Adapter\Xml");
-        $property = $class->getProperty("xml");
-        $property->setAccessible(true);
-        
-        $exportData = array(array("John", "Smith", "19"));
-
-        $temp = new Xml();
-        $temp->init($exportData);
-        $this->assertInstanceOf('SimpleXMLElement', $property->getValue($temp));
-
-    } 
 
     /**
      * @dataProvider xmlCreationWithHeadersProvider
@@ -112,7 +96,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         $this->obj->setHeaders(array('name', 'lastname', 'age'));  
         $this->obj->init($exportData, false);      
         $this->obj->setOutputPath("/tmp/");
-        $this->obj->export($filename);
+        $this->obj->run($filename);
 
         $this->assertSame(file_get_contents("/tmp/" . $filename), $this->primitiveXmlCreate($exportData, array('name', 'lastname', 'age')));
 

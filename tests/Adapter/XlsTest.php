@@ -25,8 +25,9 @@ class XlsTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         date_default_timezone_set('Europe/Warsaw');
-        $this->obj = new Xls();
-
+        
+        $xls = new Xls();
+        $this->obj = new \Vegas\Exporter\Exporter($xls);
     }
     
     protected function tearDown()
@@ -37,9 +38,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
             if (file_exists($value)){
                 unlink($value);
             }
-
         }
-
     }
     
     public function testSaveWithHeader()
@@ -58,7 +57,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         $this->obj->setOutputPath($outputPath);
         $this->obj->setFileName($fileName);
         $this->obj->init($exportData);
-        $this->obj->export();
+        $this->obj->run();
 
         $this->assertFileExists($outputPath . $fileName);
     }
@@ -81,7 +80,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         $this->obj->setFileName($fileName);
         
         $this->obj->init($exportData);
-        $this->obj->export();
+        $this->obj->run();
 
         $this->assertFileExists($outputPath . $fileName);
     }
@@ -89,11 +88,10 @@ class XlsTest extends \PHPUnit_Framework_TestCase
     public function testXlsNoDataGiven() 
     {
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
-        $this->obj->init(array(), false);        
-
+        $this->obj->init(array());
     }
 
-    public function testInvalidKeys()
+    public function testInvalidData()
     {
         $exportData = array(
             array(
@@ -103,8 +101,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
             )
         );
                 
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidKeysException');
-        $this->obj->init($exportData, true);        
-
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
+        $this->obj->init($exportData, true);
     }
 }

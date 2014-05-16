@@ -14,7 +14,7 @@ namespace Vegas\Exporter\Adapter;
 
 use \Vegas\Exporter\Adapter\Exception\PdfException as PdfException;
 
-class Pdf extends ExporterAbstract
+class Pdf extends AdapterAbstract
 {
     /**
      * @var string
@@ -151,17 +151,17 @@ class Pdf extends ExporterAbstract
      * Initializes PDF object and preps data to export.
      * 
      * @param array $data
-     * @param type $keysAsHeaders
+     * @param type $useKeysAsHeaders
      * @throws Exception\ExportDataEmptyException
      */
-    public function init(array $data, $keysAsHeaders = false)
+    public function init(array $data, $useKeysAsHeaders = false)
     {
         if (empty($data[0]) || !is_array($data[0]))
         {
             throw new Exception\ExportDataEmptyException();
         }
         
-        if ($keysAsHeaders){
+        if ($useKeysAsHeaders){
             $this->setHeaders(array_keys($data[0]));
         }
         
@@ -226,7 +226,7 @@ class Pdf extends ExporterAbstract
     }
     
     /**
-     * Exports file download.
+     * Sends PDF file into the browser.
      */
     public function download()
     {

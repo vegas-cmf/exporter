@@ -1,5 +1,4 @@
-<?php 
-
+<?php
 /**
  * This file is part of Vegas Exporter package.
  *
@@ -12,7 +11,7 @@
 
 namespace Vegas\Exporter\Adapter;
 
-abstract class ExporterAbstract
+abstract class AdapterAbstract implements AdapterInterface
 {
     /**
      * @var string
@@ -42,6 +41,29 @@ abstract class ExporterAbstract
     protected $headers = array();
     
     /**
+     * @param array $data
+     * @param boolean $useKeysAsHeaders
+     */
+    abstract public function init(array $data, $useKeysAsHeaders = false);
+    
+    abstract protected function download();
+    
+    abstract protected function exportFile();
+    
+    /**
+     * Exports data into file if output path was set.
+     * Forces file download otherwise.
+     */
+    public function export()
+    {
+        if (empty($this->outputPath)) {
+            $this->download();
+        } else {
+            $this->exportFile();
+        }
+    }
+    
+    /**
      * Sets header rows for output data.
      * It must be used before init in order to work.
      * 
@@ -55,22 +77,6 @@ abstract class ExporterAbstract
         
         $this->headers = array_values($headers);
     }
-    
-    /**
-     * Initializes data object for export.
-     * It must set up properties object as well.
-     * 
-     * @param array $data set of data to export
-     * @param type $keysAsHeaders uses array keys as headers for export data
-     */
-    abstract public function init(array $data, $keysAsHeaders = false);
-    
-    abstract protected function exportFile();
-    
-    /**
-     * Exports file download.
-     */
-    abstract public function download();
     
     /**
      * @param String $path
@@ -98,19 +104,6 @@ abstract class ExporterAbstract
         }
         
         return $this->fileName = $name;
-    }
-        
-    /**
-     * Exports data into file if output path was set.
-     * Forces file download otherwise.
-     */
-    public function export()
-    {
-        if (empty($this->outputPath)) {
-            $this->download();
-        } else {
-            $this->exportFile();
-        }
     }
     
     /**

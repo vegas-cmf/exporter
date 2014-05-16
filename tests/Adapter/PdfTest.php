@@ -13,7 +13,8 @@ class PdfTest extends \PHPUnit_Framework_TestCase
     
     public function setUp()
     {
-        $this->obj = new Pdf();
+        $pdf = new Pdf();
+        $this->obj = new \Vegas\Exporter\Exporter($pdf);
     }
     
     public function tearDown()
@@ -46,7 +47,7 @@ class PdfTest extends \PHPUnit_Framework_TestCase
     
     public function testInitSuccess()
     {
-        $this->assertInstanceOf('\Vegas\Exporter\Adapter\Pdf', $this->obj);
+        $this->assertInstanceOf('\Vegas\Exporter\Exporter', $this->obj);
         
         $exportData = array(
             array(1, 2),
@@ -72,7 +73,7 @@ class PdfTest extends \PHPUnit_Framework_TestCase
         
         $this->obj->setOutputPath($outputPath);
         $this->obj->setFileName($fileName);
-        $this->obj->export();
+        $this->obj->run();
         
         $this->assertFileExists($outputPath . $fileName);
     }
@@ -95,7 +96,7 @@ class PdfTest extends \PHPUnit_Framework_TestCase
         $this->obj->setFileName($fileName);
         
         $this->obj->init($exportData);
-        $this->obj->export();
+        $this->obj->run();
         
         $this->assertFileExists($outputFilePath);
         
@@ -119,7 +120,7 @@ class PdfTest extends \PHPUnit_Framework_TestCase
         $this->obj->setFileName($fileName);
         
         $this->obj->init($exportData);
-        $this->obj->export();
+        $this->obj->run();
         
         $this->assertFileExists($outputFilePath);
         

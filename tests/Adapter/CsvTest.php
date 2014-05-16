@@ -23,7 +23,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     
     protected function setUp()
     {
-        $this->obj = new Csv();
+        $csv = new Csv();
+        $this->obj = new \Vegas\Exporter\Exporter($csv);
     }
     
     protected function tearDown()
@@ -33,7 +34,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         if (file_exists('test.csv')){
             unlink('test.csv');
         }
-
     }
 
     public function testCsvExport()
@@ -53,7 +53,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $this->obj->setOutputPath($outputPath);
         
         $this->obj->init($exportData);
-        $this->obj->export();
+        $this->obj->run();
 
         $csv_string = "name,lastname,age;John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;";
         
@@ -75,19 +75,17 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $this->obj->setFileName($fileName);
         
         $this->obj->init($exportData, false);
-        $this->obj->export($fileName);
+        $this->obj->run($fileName);
 
         $csv_string = "John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;";
         
         $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
-
     }
     
     public function testCsvInit()
     {
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
         $this->obj->init(array(), false);        
-
     }
     
     public function testCsvObjVar()
@@ -101,6 +99,5 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $temp = new Csv();
         $temp->init($exportData, false);
         $this->assertTrue(is_string($property->getValue($temp)));
-        
     }
 }

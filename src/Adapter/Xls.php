@@ -12,12 +12,7 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use Vegas\Exporter\Exception as ExporterException;
-
-use Vegas\Exporter\Adapter\Exception\DataNotFoundException as DataNotFoundException;
-use Vegas\Exporter\Adapter\Exception\InvalidKeysException as InvalidKeysException;
-
-class Xls extends ExporterAbstract
+class Xls extends AdapterAbstract
 {    
     /**
      * Holds data for exportData function
@@ -54,13 +49,14 @@ class Xls extends ExporterAbstract
      * file to get content length. It's necessary to download file.
      * 
      * @param array $data
-     * @param boolean $keysAsHeaders default false
-     * @throws ExporterException
+     * @param boolean $useKeysAsHeaders
+     * @throws Exception\DataNotFoundException
+     * @throws Exception\InvalidArgumentTypeException
      */
-    public function init(array $data, $keysAsHeaders = false)
+    public function init(array $data, $useKeysAsHeaders = false)
     {
         if($data == array()){
-            throw new DataNotFoundException();
+            throw new Exception\DataNotFoundException();
         }
         
         $this->xls = new \PHPExcel();
@@ -69,26 +65,18 @@ class Xls extends ExporterAbstract
         $i = 1;
         $sheet = $this->xls->getActiveSheet();
         
-        if($keysAsHeaders === true){
-            $keys = array_keys($data);
-            if(is_numeric($keys[0])){
-                throw new InvalidKeysException();
-            }
+        if ($useKeysAsHeaders ) {
             $this->setHeaders(array_keys($data));
-            
-            array_unshift($data, $this->headers);
         }
         
         foreach($data as $item){
-            
             $column = 'A';
             foreach($item as $value){
-                $sheet->getCell($column . $i)->setValue($value);
-                $column++;
+                if (!is_string($value)){
+                    throw new Exception\InvalidArgumentTypeException();
+                }
+                $sheet->getCell(++$column . ++$i)->setValue($value);
             }
-            
-            $i++;
-            
         }
         
         $temporary_file = $this->outputPath . "test.xls";
@@ -97,16 +85,11 @@ class Xls extends ExporterAbstract
         
         $this->contentSize = filesize($temporary_file);
         unlink($temporary_file);
-                
     }
     
-     /**
-     * Override abstract function from parent. It sets fileName to previously
-     * set up instance of stdClass, and use private method saveExcel()
-     * 
-     * @param array $data
-     * @param boolean $keysAsHeaders
-     * @throws XmlException
+    /**
+     * It sets fileName to previously set up instance of stdClass
+     * and use private method saveExcel()
      */
     public function exportFile()
     {
@@ -115,7 +98,7 @@ class Xls extends ExporterAbstract
     }
     
     /**
-     * Sends generated XLS into to a browser.
+     * Sends generated XLS into to the browser.
      */
     public function download()
     {

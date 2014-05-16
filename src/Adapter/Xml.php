@@ -12,8 +12,8 @@
 
 namespace Vegas\Exporter\Adapter;
 
-class Xml extends ExporterAbstract {
-    
+class Xml extends AdapterAbstract
+{    
     /**
      * Variable use to store SimpleXMLElement, which are set up in init() function.
      * 
@@ -39,20 +39,16 @@ class Xml extends ExporterAbstract {
      * value through setHeaders 
      * 
      * @param array $data
-     * @param boolean $keysAsHeaders
+     * @param boolean $useKeysAsHeaders default false
      * @throws XmlException
      */
-    public function init(array $data, $keysAsHeaders = true)
+    public function init(array $data, $useKeysAsHeaders = false)
     {
-        if($data == array()){
+        if($data === array()){
             throw new Exception\DataNotFoundException();
         }
 
-        if($keysAsHeaders === true){
-            $keys = array_keys($data);
-            if(!is_array($keys)){
-                throw new Exception\EmptyKeysException();
-            }
+        if($useKeysAsHeaders){
             $this->setHeaders(array_keys($data));
         }
         
@@ -64,10 +60,10 @@ class Xml extends ExporterAbstract {
             
             foreach($items as $key => $item){
                 
-                if($keysAsHeaders){
+                if($useKeysAsHeaders){
                     $parent->addChild($key, $item);
                 } else {      
-                    if(!$this->headers){
+                    if(empty($this->headers)){
                         throw new Exception\EmptyHeadersException();
                     }
                     $parent->addChild($this->headers[$key], $item);
@@ -95,7 +91,7 @@ class Xml extends ExporterAbstract {
     }
     
     /**
-     * Sends generated XML into to a browser.
+     * Sends generated XML into to the browser.
      */
     public function download()
     {
