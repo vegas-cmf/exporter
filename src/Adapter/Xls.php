@@ -63,20 +63,30 @@ class Xls extends AdapterAbstract
         $this->xls->setActiveSheetIndex(0);
         
         $i = 1;
+        $column = 'A';
+        
         $sheet = $this->xls->getActiveSheet();
         
-        if ($useKeysAsHeaders ) {
+        if ($useKeysAsHeaders) {
             $this->setHeaders(array_keys($data));
         }
         
+        foreach($this->headers as $key){
+            $sheet->getCell($column . $i)->setValue($key);
+            ++$column;
+        }
+        $i++;
+
         foreach($data as $item){
             $column = 'A';
             foreach($item as $value){
                 if (!is_string($value)){
                     throw new Exception\InvalidArgumentTypeException();
                 }
-                $sheet->getCell(++$column . ++$i)->setValue($value);
+                $sheet->getCell($column . $i)->setValue($value);
+                ++$column;
             }
+            $i++;
         }
         
         $temporary_file = $this->outputPath . "test.xls";
