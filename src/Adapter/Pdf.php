@@ -12,7 +12,7 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use \Vegas\Exporter\Adapter\Exception\PdfException as PdfException;
+use \Vegas\Exporter\Extension\Fpdf;
 
 class Pdf extends AdapterAbstract
 {
@@ -71,6 +71,12 @@ class Pdf extends AdapterAbstract
      */
     const PAGE_ORIENTATION_LANDSCAPE = 'Landscape';
     
+            
+    /**
+     * @var string
+     */
+    const PAGE_MARGIN = 10;
+    
     /**
      * @var string
      */
@@ -112,6 +118,21 @@ class Pdf extends AdapterAbstract
     const FONT_STYLE_UNDERLINE = 'U';
     
     /**
+     * @var integer
+     */
+    const FONT_SIZE = 10;
+    
+    /**
+     * @var integer
+     */
+    const CELL_WIDTH = 40;
+    
+    /**
+     * @var integer
+     */
+    const CELL_HEIGHT = 10;
+    
+    /**
      * @var StdClass
      */
     private $config;
@@ -120,6 +141,16 @@ class Pdf extends AdapterAbstract
      * @var FPDF
      */
     private $pdf;
+    
+    /**
+     * @var integer
+     */
+    private $cursorX;
+    
+    /**
+     * @var integer
+     */
+    private $cursorY;
     
     public function __construct()
     {
@@ -131,10 +162,10 @@ class Pdf extends AdapterAbstract
         $this->setPageOrientation(self::PAGE_ORIENTATION_PORTRAIT);
         $this->setPageSize(self::PAGE_SIZE_A4);
         
-        $this->setCellWidth(40);
-        $this->setCellHeight(10);
+        $this->setCellWidth(self::CELL_WIDTH);
+        $this->setCellHeight(self::CELL_HEIGHT);
         
-        $this->setFontSize(16);
+        $this->setFontSize(self::FONT_SIZE);
         $this->setFontFamily(self::FONT_FAMILY_ARIAL);
         $this->setFontStyle(self::FONT_STYLE_REGULAR);
         
@@ -165,56 +196,166 @@ class Pdf extends AdapterAbstract
             $this->setHeaders(array_keys($data[0]));
         }
         
-        $this->pdf = new \FPDF(
+        $this->pdf = new Fpdf(
             $this->getConfig('pageOrientation'),
             'mm',
             $this->getConfig('pageSize')
         );
         
         $this->pdf->AddPage();
-        
-        $this->pdf->SetFont(
-            $this->getConfig('fontFamily'),
-            $this->getConfig('fontStyle'),
-            $this->getConfig('fontSize')
-        );
+        $this->cursorY = self::PAGE_MARGIN;
+        $this->cursorX = self::PAGE_MARGIN;
         
         // Export data headers
-        if (count($this->headers) > 0){
-            
-            foreach ($this->headers as $text){
-                $this->pdf->Cell(
-                    $this->getConfig('cellWidth', self::HEADER),
-                    $this->getConfig('cellHeight', self::HEADER),
-                    $text,
-                    1,
-                    0,
-                    'L'
-                );
-            }
-            
-            $this->pdf->Ln();
+        if (count($this->headers) > 0) {
+            $this->setFontStyles(self::HEADER);
+            $maxHeight = $this->addRow($this->headers, false);
+            $this->incrementCursorX($maxHeight);
         }
+
+        $this->setFontStyles(self::CONTENT);
         
         // Export data conent
         foreach ($data as $row) {
-            
-            foreach ($row as $text) {
-                
-                $this->pdf->Cell(
-                    $this->getConfig('cellWidth', self::CONTENT),
-                    $this->getConfig('cellHeight', self::CONTENT),
-                    $text,
-                    1,
-                    0,
-                    'L'
-                ); 
-            }
-            
-            $this->pdf->Ln();
+            $this->addRow($row);
         }
     }
     
+    /**
+     * @param string $target
+     */
+    private function setFontStyles($target)
+    {
+        $this->pdf->SetFont(
+            $this->getConfig('fontFamily', $target),
+            $this->getConfig('fontStyle', $target),
+            $this->getConfig('fontSize', $target)
+        );
+    }
+    
+    /**
+     * @param array $data
+     * @param boolean $incrementCursor
+     * @return integer
+     */
+    private function addRow(array $data, $incrementCursor = true)
+    {
+        if ($incrementCursor) {
+            $this->cursorX = self::PAGE_MARGIN;
+        }
+        
+        $maxHeight = $this->getMaxRowHeight($data);
+        $maxLinesNr = $this->getLinesCount($maxHeight);
+
+        foreach ($data as $text) {
+            $this->fillCell($maxHeight, $maxLinesNr, $text);
+        }
+
+        if ($incrementCursor) {
+            $this->incrementCursorX($maxHeight);
+        }
+        
+        return $maxHeight;
+    }
+    
+    /**
+     * @param integer $value
+     */
+    private function incrementCursorX($value)
+    {
+        $this->cursorY += $value;
+    }
+    
+    /**
+     * @param integer $maxHeight
+     * @param integer $maxLinesNr
+     * @param string $text
+     */
+    private function fillCell($maxHeight, $maxLinesNr, $text)
+    {
+        $heightLeft =  $this->pdf->h - $this->cursorY - self::PAGE_MARGIN;
+        
+        if ($maxHeight > $heightLeft) {
+            $this->pdf->AddPage();
+            $this->cursorY = self::PAGE_MARGIN;
+        }
+
+        $this->pdf->SetXY($this->cursorX, $this->cursorY);
+
+        $currentCellHeight = $this->getCellHeight($text);
+        $currentLinesNr = $this->getLinesCount($currentCellHeight);
+        $emptyLines = $maxLinesNr - $currentLinesNr;
+
+        // add empty lines if current cell has
+        // less text lines then highest cell in current row
+        if ($emptyLines > 0) {
+            $text .= str_repeat(PHP_EOL, $emptyLines + 1);
+        }
+
+        $this->addCell($text);
+
+        $this->cursorX += $this->getConfig('cellWidth', self::CONTENT);
+    }
+    
+    /**
+     * @param array $row
+     * @return integer
+     */
+    private function getMaxRowHeight(array $row)
+    {
+        $height = 0;
+        foreach ($row as $text) {
+            
+            $currentHeight = $this->getCellHeight($text);
+            
+            if ($currentHeight > $height) {
+                $height = $currentHeight;
+            }
+        }
+
+        return $height;
+    }
+    
+    /**
+     * @param integer $height
+     * @return integer
+     */
+    private function getLinesCount($height)
+    {
+        return $height / $this->getConfig('cellHeight', self::CONTENT);
+    }
+    
+    /**
+     * @param string $text
+     */
+    private function addCell($text)
+    {
+        $this->pdf->MultiCell(
+            $this->getConfig('cellWidth', self::CONTENT),
+            $this->getConfig('cellHeight', self::CONTENT),
+            $text,
+            1,
+            'L',
+            false
+        );
+    }
+    
+    /**
+     * @param string $text
+     */
+    private function getCellHeight($text)
+    {
+        return $this->pdf->GetMultiCellHeight(
+            $this->getConfig('cellWidth', self::CONTENT),
+            $this->getConfig('cellHeight', self::CONTENT),
+            $text,
+            1,
+            'L',
+            false
+        );
+    }
+
+
     /**
      * Exports PDF file.
      */
