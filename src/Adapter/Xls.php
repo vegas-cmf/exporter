@@ -88,8 +88,12 @@ class Xls extends AdapterAbstract
             }
             $i++;
         }
-        
-        $temporary_file = $this->outputPath . "test.xls";
+
+        $temporary_file = '/tmp/'.uniqid().'.xls';
+        if(!empty($this->outputPath)) {
+            $temporary_file = $this->outputPath .uniqid() . '.xls';
+        }
+
         $writer = new \PHPExcel_Writer_Excel2007($this->xls);
         $writer->save($temporary_file);
         
