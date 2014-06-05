@@ -49,8 +49,8 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         
         $exportData = array(
             array("John", "Smith", "19"),
-            array("Paul", "Smith2", "36"),
-            array("Adam", "Smit3", "14"),
+            array("Sam", "Wozniacki", "36"),
+            array("Adam", "Ferrero", "14"),
         );
         
         $this->obj->setHeaders($headers);
@@ -79,7 +79,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         $this->obj->setOutputPath($outputPath);
         $this->obj->setFileName($fileName);
         
-        $this->obj->init($exportData);
+        $this->obj->init($exportData, true);
         $this->obj->run();
 
         $this->assertFileExists($outputPath . $fileName);
@@ -91,7 +91,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         $this->obj->init(array());
     }
 
-    public function testInvalidData()
+    public function testXlsNoHeadersGiven()
     {
         $exportData = array(
             array(
@@ -101,7 +101,21 @@ class XlsTest extends \PHPUnit_Framework_TestCase
             )
         );
                 
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidHeadersDataException');
         $this->obj->init($exportData, true);
+    }
+
+    public function testXlsInvalidDataGiven()
+    {
+        $exportData = array(
+            array(
+                array(array(), "Smith", "19"),
+                array("Paul", "Smith2", "36"),
+                array("Adam", "Smit3", "14"),
+            )
+        );
+                
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
+        $this->obj->init($exportData);
     }
 }

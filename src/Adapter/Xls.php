@@ -68,10 +68,13 @@ class Xls extends AdapterAbstract
         $sheet = $this->xls->getActiveSheet();
         
         if ($useKeysAsHeaders) {
-            $this->setHeaders(array_keys($data));
+            $this->setHeaders(array_keys($data[0]));
         }
         
         foreach($this->headers as $key){
+            if (!is_string($key)){
+                throw new Exception\InvalidHeadersDataException();
+            }
             $sheet->getCell($column . $i)->setValue($key);
             ++$column;
         }
