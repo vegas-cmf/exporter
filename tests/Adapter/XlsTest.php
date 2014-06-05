@@ -118,4 +118,18 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
         $this->obj->init($exportData);
     }
+
+    public function testXlsNullDataGiven()
+    {
+        $exportData = array(
+            array(
+                array("John", "Smith", "19"),
+                array(null, "Smith2", "36"),
+                array("Adam", "Smit3", "14"),
+            )
+        );
+                
+        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
+        $this->obj->init($exportData);
+    }
 }

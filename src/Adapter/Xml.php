@@ -49,7 +49,7 @@ class Xml extends AdapterAbstract
         }
 
         if($useKeysAsHeaders){
-            $this->setHeaders(array_keys($data));
+            $this->setHeaders(array_keys($data[0]));
         }
         
         $this->xml = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><root></root>');
@@ -60,11 +60,22 @@ class Xml extends AdapterAbstract
             
             foreach($items as $key => $item){
                 
+                if ($item == array()){
+                    throw new Exception\InvalidArgumentTypeException();
+                }
+                
+                if ($item != strip_tags($item)){
+                    throw new Exception\HtmlTagsFoundException();
+                }
+                
                 if($useKeysAsHeaders){
                     $parent->addChild($key, $item);
                 } else {      
                     if(empty($this->headers)){
                         throw new Exception\EmptyHeadersException();
+                    }
+                    if ($this->headers[$key] != strip_tags($this->headers[$key])){
+                        throw new Exception\HtmlTagsFoundException();
                     }
                     $parent->addChild($this->headers[$key], $item);
                 }

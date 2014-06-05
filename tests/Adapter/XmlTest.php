@@ -40,33 +40,37 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
      */
     public function testXmlExport()
     {
-        $data = array(array("John", "Smith", "19"));
-        $filename = 'test.xml';
+        $exportData = array(array("John", "Smith", "19"));
+        $fileName = 'test.xml';
+        $outputPath = '/tmp/';
         
         $this->obj->setHeaders(array('name', 'lastname', 'age'));
-        $this->obj->setOutputPath("/tmp/");
-        $this->obj->init($data);
-        $this->obj->run($filename);
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->init($exportData);
+        $this->obj->run();
 
-        $this->assertSame(file_get_contents('/tmp/' . $filename), file_get_contents('/tmp/test.xml'));
+        $this->assertSame(file_get_contents($outputPath . $fileName), $this->xmlCreate($exportData, array('name', 'lastname', 'age')));
     }
     
     /**
-     * @dataProvider xmlCreationWithoutHeadersProvider
+     * @dataProvider xmlExportWithoutHeadersProvider
      * @param string $exportData
      */
-    public function testXmlCreationWithoutHeaders($exportData)
+    public function testXmlExportWithoutHeaders($exportData)
     {
-        $filename = 'test.xml';
+        $fileName = 'test.xml';
+        $outputPath = '/tmp/';
         $this->obj->init($exportData, true);
-        $this->obj->setOutputPath("/tmp/");
-        $this->obj->run($filename);
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->run($fileName);
 
-        $this->assertSame(file_get_contents("/tmp/" . $filename), $this->primitiveXmlCreate($exportData));
+        $this->assertSame(file_get_contents($outputPath . $fileName), $this->xmlCreate($exportData));
 
     } 
     
-    public function xmlCreationWithoutHeadersProvider()
+    public function xmlExportWithoutHeadersProvider()
     {
         return array(
             array(
@@ -83,26 +87,72 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
     {
         $this->setExpectedException('Vegas\Exporter\Adapter\Exception\DataNotFoundException');
         $this->obj->init(array());
-
+        $this->obj->init(array(array()));
+        $this->obj->init(array(null));
     } 
 
+    
+    public function testXmlHtmlTagsDataGiven()
+    {
+        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\HtmlTagsFoundException');
+        
+        $exportData = array(array("<a>John</a>", "Smith", "19"));
+        $fileName = 'test.xml';
+        $outputPath = '/tmp/';
+        
+        $this->obj->setHeaders(array('name', 'lastname', 'age'));
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->init($exportData);
+    } 
+    
+    public function testXmlHtmlTagsHeaderGiven()
+    {
+        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\HtmlTagsFoundException');
+        
+        $exportData = array(array("John", "Smith", "19"));
+        $fileName = 'test.xml';
+        $outputPath = '/tmp/';
+        
+        $this->obj->setHeaders(array('<b>name</b>', 'lastname', 'age'));
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->init($exportData);
+    } 
+    
+    public function testXmlInvalidDataGiven()
+    {
+        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
+        
+        $exportData = array(array(array(), "Smith", "19"));
+        $fileName = 'test.xml';
+        $outputPath = '/tmp/';
+        
+        $this->obj->setHeaders(array('name', 'lastname', 'age'));
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->init($exportData);
+    } 
+    
     /**
-     * @dataProvider xmlCreationWithHeadersProvider
+     * @dataProvider xmlExportWithHeadersProvider
      * @param string $exportData
      */
-    public function testXmlCreationWithHeaders($exportData)
+    public function testXmlExportWithHeaders($exportData)
     {
-        $filename = 'test.xml';
+        $fileName = 'test.xml';
+        $outputPath = '/tmp/';
         $this->obj->setHeaders(array('name', 'lastname', 'age'));  
-        $this->obj->init($exportData, false);      
-        $this->obj->setOutputPath("/tmp/");
-        $this->obj->run($filename);
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        $this->obj->init($exportData, false);    
+        $this->obj->run($fileName);
 
-        $this->assertSame(file_get_contents("/tmp/" . $filename), $this->primitiveXmlCreate($exportData, array('name', 'lastname', 'age')));
+        $this->assertSame(file_get_contents($outputPath . $fileName), $this->xmlCreate($exportData, array('name', 'lastname', 'age')));
 
     }
        
-    public function xmlCreationWithHeadersProvider()
+    public function xmlExportWithHeadersProvider()
     {
         return array(
             array(
@@ -115,7 +165,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
         );
     }
 
-    private function primitiveXmlCreate($exportData, $keys = null)
+    private function xmlCreate($exportData, $keys = null)
     {
         $this->obj = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root>";
 

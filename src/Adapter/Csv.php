@@ -52,24 +52,27 @@ class Csv extends AdapterAbstract
         }
 
         if($useKeysAsHeaders){
-            $this->setHeaders(array_keys($data));
+            $this->setHeaders(array_keys($data[0]));
         } 
         
         if($this->headers != array()){
             foreach($this->headers as $key){
-                 $this->csv .= $key . $this->valueSeparator;
+                $key = str_replace(array("\r", "\n"), "", strip_tags($key));
+                $this->csv .= $key . $this->valueSeparator;
             }
             
-            $this->csv = substr($this->csv, 0, -1) . $this->lineSeparator;
+            $separatorLength = (int)strlen($this->valueSeparator);
+            $this->csv = substr($this->csv, 0, -$separatorLength) . $this->lineSeparator;
         }
         
         foreach($data as $item){
             
             foreach($item as $value){
-                 $this->csv .= $value . $this->valueSeparator;
+                $value = str_replace(array("\r", "\n"), "", strip_tags($value));
+                $this->csv .= $value . $this->valueSeparator;
             }
-            
-            $this->csv = substr($this->csv, 0, -1) . $this->lineSeparator;
+            $separatorLength = (int)strlen($this->valueSeparator);
+            $this->csv = substr($this->csv, 0, -$separatorLength) . $this->lineSeparator;
             
         }
         

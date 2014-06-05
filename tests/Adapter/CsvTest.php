@@ -22,11 +22,12 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     private $csv;
     
     private $defaultNewLineSeparator = PHP_EOL;
-    private $defaultValueSeparator = ',';
     
     protected function setUp()
     {
         $csv = new Csv();
+        $this->defaultNewLineSeparator = ';';
+        $csv->setNewLineSeparator(';');
         $this->obj = new \Vegas\Exporter\Exporter($csv);
     }
     
@@ -57,8 +58,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         
         $this->obj->init($exportData);
         $this->obj->run();
-
-        $csv_string = "name,lastname,age;John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;";
+        
+        $csv_string = 'name,lastname,age;John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;';
         
         $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
     }
@@ -80,7 +81,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $this->obj->init($exportData, false);
         $this->obj->run($fileName);
 
-        $csv_string = "John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;";
+        $csv_string = 'John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;';
         
         $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
     }
@@ -102,7 +103,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $this->obj->init($exportData, true);
         $this->obj->run($fileName);
 
-        $csv_string = "name,lastname,age;John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;";
+        $csv_string = 'name,lastname,age;John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;';
         
         $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
     }
@@ -133,17 +134,26 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     
     public function testCsvLongSeparator(){
         
+        $fileName = 'test.csv';
+        $outputPath = '/tmp/';
+        
         $exportData = array(
-            array("John\n in new line", "Smith", "19"),
+            array("John", "Smith", "19"),
             array("Paul", "Smith2", "36"),
             array("Adam", "Smit3", "14"),
         );
-        $sep = '@$-=*&';
+        $sep = '@$-=*';
+        
+        
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        
         $this->obj->setValueSeparator($sep);   
+        
         $this->obj->init($exportData, false);
         $this->obj->run($fileName);
 
-        $csv_string = 'John in new line'.$sep.'Smith'.$sep.'19;Paul'.$sep.'Smith2'.$sep.'36;Adam'.$sep.'Smit3'.$sep.'14;';
+        $csv_string = 'John'.$sep.'Smith'.$sep.'19;Paul'.$sep.'Smith2'.$sep.'36;Adam'.$sep.'Smit3'.$sep.'14;';
         
         $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
         
@@ -151,16 +161,45 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     
     public function testCsvNewLine(){
         
+        $fileName = 'test.csv';
+        $outputPath = '/tmp/';
+        
         $exportData = array(
             array("John\n in new line", "Smith", "19"),
             array("Paul", "Smith2", "36"),
             array("Adam", "Smit3", "14"),
         );
-                        
+        
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        
         $this->obj->init($exportData, false);
         $this->obj->run($fileName);
 
-        $csv_string = "John in new line,Smith,19;Paul,Smith2,36;Adam,Smit3,14;";
+        $csv_string = 'John in new line,Smith,19;Paul,Smith2,36;Adam,Smit3,14;';
+        
+        $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
+        
+    }
+    
+    public function testCsvHtmlTags(){
+        
+        $fileName = 'test.csv';
+        $outputPath = '/tmp/';
+        
+        $exportData = array(
+            array("<b>John</b>", "Smith", "19"),
+            array("Paul", "Smith2", "36"),
+            array("Adam", "Smit3", "14"),
+        );
+        
+        $this->obj->setOutputPath($outputPath);
+        $this->obj->setFileName($fileName);
+        
+        $this->obj->init($exportData, false);
+        $this->obj->run($fileName);
+
+        $csv_string = 'John,Smith,19;Paul,Smith2,36;Adam,Smit3,14;';
         
         $this->assertSame($csv_string, file_get_contents($outputPath . $fileName));
         
