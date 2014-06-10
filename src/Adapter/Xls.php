@@ -25,6 +25,13 @@ class Xls extends AdapterAbstract
      * @var PHPExcel 
      */
     private $xls;
+
+    /**
+     * Variable contains the binary content of the xls file
+     *
+     * @var string
+     */
+    private $content;
     
     /**
      * Constructor. Initialize $config variable as instance of stdClass. First 
@@ -99,7 +106,7 @@ class Xls extends AdapterAbstract
 
         $writer = new \PHPExcel_Writer_Excel2007($this->xls);
         $writer->save($temporary_file);
-        
+        $this->content = readfile($temporary_file);
         $this->contentSize = filesize($temporary_file);
         unlink($temporary_file);
     }
@@ -120,7 +127,7 @@ class Xls extends AdapterAbstract
     public function download()
     {
         $this->setDownloadHttpHeaders();
-        
-        echo $this->obj;
+
+        echo $this->content;
     }
 }
