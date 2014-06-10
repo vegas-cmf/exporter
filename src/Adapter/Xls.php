@@ -121,6 +121,6 @@ class Xls extends AdapterAbstract
     {
         $this->setDownloadHttpHeaders();
         
-        echo $this->obj();
+        echo $this->obj;
     }
 }
