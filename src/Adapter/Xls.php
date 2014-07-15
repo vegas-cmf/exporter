@@ -77,7 +77,7 @@ class Xls extends AdapterAbstract
         if ($useKeysAsHeaders) {
             $this->setHeaders(array_keys($data[0]));
         }
-        
+
         foreach($this->headers as $key){
             if (!is_string($key)){
                 throw new Exception\InvalidHeadersDataException();
@@ -103,10 +103,9 @@ class Xls extends AdapterAbstract
         if(!empty($this->outputPath)) {
             $temporary_file = $this->outputPath .uniqid() . '.xls';
         }
-
         $writer = new \PHPExcel_Writer_Excel2007($this->xls);
         $writer->save($temporary_file);
-        $this->content = readfile($temporary_file);
+        $this->content = file_get_contents($temporary_file);
         $this->contentSize = filesize($temporary_file);
         unlink($temporary_file);
     }

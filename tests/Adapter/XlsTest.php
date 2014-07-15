@@ -46,13 +46,13 @@ class XlsTest extends \PHPUnit_Framework_TestCase
         $fileName = 'test.xls';
         $outputPath = '/tmp/';
         $headers = array('name', 'lastname', 'age');
-        
+
         $exportData = array(
             array("John", "Smith", "19"),
             array("Sam", "Wozniacki", "36"),
             array("Adam", "Ferrero", "14"),
         );
-        
+
         $this->obj->setHeaders($headers);
         $this->obj->setOutputPath($outputPath);
         $this->obj->setFileName($fileName);
@@ -72,20 +72,20 @@ class XlsTest extends \PHPUnit_Framework_TestCase
             array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
             array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
         );
-        
+
         $fileName = 'test.xls';
         $outputPath = '/tmp/';
-        
+
         $this->obj->setOutputPath($outputPath);
         $this->obj->setFileName($fileName);
-        
+
         $this->obj->init($exportData, true);
         $this->obj->run();
 
         $this->assertFileExists($outputPath . $fileName);
     }
 
-    public function testXlsNoDataGiven() 
+    public function testXlsNoDataGiven()
     {
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
         $this->obj->init(array());
@@ -100,7 +100,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
                 array("Adam", "Smit3", "14"),
             )
         );
-                
+
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidHeadersDataException');
         $this->obj->init($exportData, true);
     }
@@ -114,7 +114,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
                 array("Adam", "Smit3", "14"),
             )
         );
-                
+
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
         $this->obj->init($exportData);
     }
@@ -128,7 +128,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
                 array("Adam", "Smit3", "14"),
             )
         );
-                
+
         $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
         $this->obj->init($exportData);
     }

@@ -45,9 +45,15 @@ abstract class AdapterAbstract implements AdapterInterface
      * @param boolean $useKeysAsHeaders
      */
     abstract public function init(array $data, $useKeysAsHeaders = false);
-    
+
+    /**
+     * @return mixed
+     */
     abstract protected function download();
-    
+
+    /**
+     * @return mixed
+     */
     abstract protected function exportFile();
     
     /**
@@ -62,12 +68,13 @@ abstract class AdapterAbstract implements AdapterInterface
             $this->exportFile();
         }
     }
-    
+
     /**
      * Sets header rows for output data.
      * It must be used before init in order to work.
-     * 
+     *
      * @param array $headers data with header
+     * @throws Exception\EmptyHeadersException
      */
     public function setHeaders(array $headers)
     {
@@ -77,9 +84,10 @@ abstract class AdapterAbstract implements AdapterInterface
         
         $this->headers = array_values($headers);
     }
-    
+
     /**
      * @param String $path
+     * @throws Exception\OutputPathNotWritableException
      */
     public function setOutputPath($path)
     {

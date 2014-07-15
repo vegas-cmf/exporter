@@ -39,7 +39,7 @@ class Exporter
             $reflectionMethod->invokeArgs($this->adapter, $arguments);
             
         } catch (ReflectionException $exception) {
-            throw new Exception\InvalidMethodException();
+            throw new Exception\InvalidMethodException($name);
         }
     }
     
