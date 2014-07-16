@@ -42,7 +42,7 @@ class Xls extends AdapterAbstract
      */
     public function __construct()
     {
-        $this->fileName = 'export_file.xls';
+        $this->fileName = 'tests/fixtures/export_file.xls';
         $this->contentType = 'application/vnd.ms-excel';
     }
 

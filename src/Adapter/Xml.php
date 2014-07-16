@@ -29,7 +29,7 @@ class Xml extends AdapterAbstract
     public function __construct()
     {
         $this->contentType = 'application/xml';
-        $this->fileName = 'export_file.xml';
+        $this->fileName = 'tests/fixtures/export_file.xml';
     }
     
     /**

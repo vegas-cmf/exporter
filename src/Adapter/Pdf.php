@@ -157,7 +157,7 @@ class Pdf extends AdapterAbstract
         $this->config = new \stdClass();
         
         $this->setConfig('contentType', 'application/pdf');
-        $this->setFileName('export_file.pdf');
+        $this->setFileName('tests/fixtures/export_file.pdf');
         
         $this->setPageOrientation(self::PAGE_ORIENTATION_PORTRAIT);
         $this->setPageSize(self::PAGE_SIZE_A4);

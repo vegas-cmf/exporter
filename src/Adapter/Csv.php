@@ -27,7 +27,7 @@ class Csv extends AdapterAbstract
     public function __construct()
     {
         $this->contentType = 'text/csv';
-        $this->fileName = "export_file.csv";
+        $this->fileName = "tests/fixtures/export_file.csv";
         
         $this->lineSeparator = PHP_EOL;
         $this->valueSeparator = ",";
