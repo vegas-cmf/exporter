@@ -12,7 +12,7 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use \Vegas\Exporter\Extension\Fpdf;
+use \Vegas\Exporter\Extension\Mpdf;
 
 class Pdf extends AdapterAbstract
 {
@@ -138,7 +138,7 @@ class Pdf extends AdapterAbstract
     private $config;
     
     /**
-     * @var FPDF
+     * @var Mpdf
      */
     private $pdf;
     
@@ -196,7 +196,7 @@ class Pdf extends AdapterAbstract
             $this->setHeaders(array_keys($data[0]));
         }
         
-        $this->pdf = new Fpdf(
+        $this->pdf = new Mpdf(
             $this->getConfig('pageOrientation'),
             'mm',
             $this->getConfig('pageSize')
@@ -333,7 +333,7 @@ class Pdf extends AdapterAbstract
         $this->pdf->MultiCell(
             $this->getConfig('cellWidth', self::CONTENT),
             $this->getConfig('cellHeight', self::CONTENT),
-            $text,
+            utf8_encode($text),
             1,
             'L',
             false
@@ -348,7 +348,7 @@ class Pdf extends AdapterAbstract
         return $this->pdf->GetMultiCellHeight(
             $this->getConfig('cellWidth', self::CONTENT),
             $this->getConfig('cellHeight', self::CONTENT),
-            $text,
+            utf8_encode($text),
             1,
             'L',
             false

@@ -12,14 +12,14 @@
 
 namespace Vegas\Exporter\Extension;
 
-class Fpdf extends \FPDF
+class Mpdf extends \mPDF
 {
     function GetMultiCellHeight($w, $h, $txt, $border = null, $align = 'J')
     {
         // Calculate MultiCell with automatic or explicit line breaks height
         // $border is un-used, but I kept it in the parameters to keep the call
         // to this function consistent with MultiCell()
-        $cw = &$this->CurrentFont['cw'];
+        $cw = $this->CurrentFont['cw'];
 
         if ($w==0) {
             $w = $this->w-$this->rMargin-$this->x;
@@ -68,7 +68,7 @@ class Fpdf extends \FPDF
                 $ns++;
             }
 
-            $l += $cw[$c];
+            $l += $cw[(int)$c];
             if ($l>$wmax) {
                 // Automatic line break
                 if ($sep==-1) {
