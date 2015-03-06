@@ -10,9 +10,33 @@ class PdfTest extends \PHPUnit_Framework_TestCase
      * @var Pdf
      */
     private $obj;
+
+    /**
+     * @var string
+     */
+    private $testFile = 'test.pdf';
+
+    /**
+     * @return string
+     */
+    private function getTestPath()
+    {
+        return sys_get_temp_dir() . DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * @return string
+     */
+    private function getTestFilePath()
+    {
+        return $this->getTestPath() . $this->testFile;
+    }
     
     public function setUp()
     {
+        $filePath = $this->getTestPath() . $this->testFile;
+        file_exists($filePath) && unlink($filePath);
+
         $pdf = new Pdf();
         $this->obj = new \Vegas\Exporter\Exporter($pdf);
     }
@@ -33,91 +57,86 @@ class PdfTest extends \PHPUnit_Framework_TestCase
     
     public function initDataEmptyExceptionProvider()
     {
-        return array(
+        return [
             // #0
-            array(array(1)),
+            [[1]],
             // #1
-            array(array(null)),
+            [[null]],
             // #2
-            array(array(new \stdClass())),
+            [[new \stdClass()]],
             // #3
-            array(array()),
-        );
+            [[]],
+        ];
     }
     
     public function testInitSuccess()
     {
         $this->assertInstanceOf('\Vegas\Exporter\Exporter', $this->obj);
         
-        $exportData = array(
-            array(1, 2),
-            array(11, 22),
-            array(111, 222),
-        );
+        $exportData = [
+            [1, 2],
+            [11, 22],
+            [111, 222],
+        ];
         
         $this->obj->init($exportData);
     }
     
     public function testExportFileWithoutHeaders()
     {
-        $outputPath = '/tmp/';
-        $fileName = 'file.pdf';
-        
-        $exportData = array(
-            array(1, 2),
-            array(11, 22),
-            array(111, 222),
-        );
+        $exportData = [
+            [1, 2],
+            [11, 22],
+            [111, 222],
+        ];
         
         $this->obj->init($exportData);
         
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
+        $this->obj->setOutputPath($this->getTestPath());
+        $this->obj->setFileName($this->testFile);
         $this->obj->run();
         
-        $this->assertFileExists($outputPath . $fileName);
+        $this->assertFileExists($this->getTestFilePath());
     }
     
     public function testExportFileWithtHeadersSetFromMethod()
     {
-        $headers = array('foo', 'bar');
-        $outputPath = '/tmp/';
-        $fileName = 'file.pdf';
-        $outputFilePath = $outputPath . $fileName;
+        $headers = ['foo', 'bar'];
+        $outputFilePath = $this->getTestFilePath();
         
-        $exportData = array(
-            array(1, 2),
-            array(11, 22),
-            array(111, 222),
-        );
+        $exportData = [
+            [1, 2],
+            [11, 22],
+            [111, 222],
+            ['zażółć gęślą', 'jaźń']
+        ];
         
         $this->obj->setHeaders($headers);
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
+        $this->obj->setOutputPath($this->getTestPath());
+        $this->obj->setFileName($this->testFile);
         
         $this->obj->init($exportData);
         $this->obj->run();
         
         $this->assertFileExists($outputFilePath);
-        
+
         unset($outputFilePath);
     }
     
     public function testExportFileWithtHeadersSetFromArgument()
     {
-        $outputPath = '/tmp/';
-        $fileName = 'file.pdf';
-        $outputFilePath = $outputPath . $fileName;
+        $outputFilePath = $this->getTestFilePath();
         
-        $exportData = array(
-            array('foo', 'bar'),
-            array(1, 2),
-            array(11, 22),
-            array(111, 222),
-        );
+        $exportData = [
+            ['foo', 'bar'],
+            [1, 2],
+            [11, 22],
+            [111, 222],
+            ['zażółć gęślą', 'jaźń']
+        ];
         
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
+        $this->obj->setOutputPath($this->getTestPath());
+        $this->obj->setFileName($this->testFile);
         
         $this->obj->init($exportData);
         $this->obj->run();
