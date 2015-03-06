@@ -20,6 +20,7 @@ class XmlTest extends \PHPUnit_Framework_TestCase {
 
     protected function setUp()
     {
+        $this->fail('Not implemented - version break');
         $xml = new Xml();
         $this->obj = new \Vegas\Exporter\Exporter($xml);
     }

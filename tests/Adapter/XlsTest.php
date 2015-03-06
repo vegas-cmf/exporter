@@ -24,6 +24,7 @@ class XlsTest extends \PHPUnit_Framework_TestCase
     
     protected function setUp()
     {
+        $this->fail('Not implemented - version break');
         date_default_timezone_set('Europe/Warsaw');
         
         $xls = new Xls();

@@ -182,7 +182,8 @@ class Pdf extends AdapterAbstract
      * Initializes PDF object and preps data to export.
      * 
      * @param array $data
-     * @param type $useKeysAsHeaders
+     * @param bool $useKeysAsHeaders
+     * @return $this
      * @throws Exception\ExportDataEmptyException
      */
     public function init(array $data, $useKeysAsHeaders = false)
@@ -219,6 +220,8 @@ class Pdf extends AdapterAbstract
         foreach ($data as $row) {
             $this->addRow($row);
         }
+
+        return $this;
     }
     
     /**
@@ -389,8 +392,8 @@ class Pdf extends AdapterAbstract
      * - PAGE_SIZE_LEGAL
      * 
      * @param string $size
-     * @return obj
-     * @throws \Exception\InvalidPageSizeException
+     * @return $this
+     * @throws Exception\InvalidPageSizeException
      */
     public function setPageSize($size)
     {
@@ -421,7 +424,7 @@ class Pdf extends AdapterAbstract
      * - PAGE_ORIENTATION_LANDSCAPE
      * 
      * @param type $orientation
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      * @throws Exception\InvalidCellWidthException
      */
     public function setPageOrientation($orientation)
@@ -446,7 +449,7 @@ class Pdf extends AdapterAbstract
      * Can be chained with other config set* methods.
      * 
      * @param integer $width
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      * @throws Exception\InvalidCellWidthException
      */
     public function setCellWidth($width)
@@ -466,7 +469,7 @@ class Pdf extends AdapterAbstract
      * Can be chained with other config set* methods.
      * 
      * @param integer $height
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      * @throws Exception\InvalidCellHeightException
      */
     public function setCellHeight($height)
@@ -486,7 +489,7 @@ class Pdf extends AdapterAbstract
      * Can be chained with other config set* methods.
      *  
      * @param integer $size default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setFontSize($size)
     {
@@ -499,7 +502,7 @@ class Pdf extends AdapterAbstract
      * Can be chained with other config set* methods.
      *  
      * @param integer $size default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setHeaderFontSize($size)
     {
@@ -511,7 +514,7 @@ class Pdf extends AdapterAbstract
      * Can be chained with other config set* methods.
      *  
      * @param integer $size default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setContentFontSize($size)
     {
@@ -529,7 +532,7 @@ class Pdf extends AdapterAbstract
      * - FONT_FAMILY_TIMES
      *  
      * @param string $name default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setFontFamily($name = self::FONT_FAMILY_ARIAL)
     {
@@ -548,7 +551,7 @@ class Pdf extends AdapterAbstract
      * - FONT_FAMILY_TIMES
      *  
      * @param string $name defaultFONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setHeaderFontFamily($name = self::FONT_FAMILY_ARIAL)
     {
@@ -566,7 +569,7 @@ class Pdf extends AdapterAbstract
      * - FONT_FAMILY_TIMES
      *  
      * @param string $name default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setContentFontFamily($name = self::FONT_FAMILY_ARIAL)
     {
@@ -585,7 +588,7 @@ class Pdf extends AdapterAbstract
      *  
      * @param string $name default FONT_STYLE_REGULAR
      * @param string|null $target default null
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setFontStyle($name = self::FONT_STYLE_REGULAR)
     {
@@ -604,7 +607,7 @@ class Pdf extends AdapterAbstract
      * - FONT_STYLE_UNDERLINE
      *  
      * @param string $name default FONT_STYLE_REGULAR.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setHeaderFontStyle($name = self::FONT_STYLE_REGULAR)
     {
@@ -622,7 +625,7 @@ class Pdf extends AdapterAbstract
      * - FONT_STYLE_UNDERLINE
      *  
      * @param string $name default FONT_STYLE_REGULAR.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      */
     public function setContentFontStyle($name = self::FONT_STYLE_REGULAR)
     {
@@ -712,7 +715,7 @@ class Pdf extends AdapterAbstract
      *  
      * @param string $name default FONT_STYLE_REGULAR
      * @param string|null $target default null
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      * @throws Exception\InvalidFontStyleException
      */
     private function setFontStyleConfig($name = self::FONT_STYLE_REGULAR, $target = null)
@@ -750,7 +753,7 @@ class Pdf extends AdapterAbstract
      * - null (both above)
      *  
      * @param string $name default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      * @throws Exception\InvalidFontFamilyException
      */
     private function setFontFamilyConfig($name = self::FONT_FAMILY_ARIAL, $target = null)
@@ -782,7 +785,7 @@ class Pdf extends AdapterAbstract
      * - null (both above)
      *  
      * @param integer $size
-     * @return \Vegas\Exporter\Adapter\Pdf
+     * @return $this
      * @throws Exception\InvalidFontSizeException
      */
     private function setFontSizeConfig($size, $target = null)

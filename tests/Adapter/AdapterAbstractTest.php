@@ -13,6 +13,7 @@ class AdapterAbstractTest extends \PHPUnit_Framework_TestCase
     
     public function setUp()
     {
+        $this->fail('Not implemented - version break');
         $this->obj = $this->getMockForAbstractClass('\Vegas\Exporter\Adapter\AdapterAbstract');
     }
     

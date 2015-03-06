@@ -34,6 +34,7 @@ class PdfTest extends \PHPUnit_Framework_TestCase
     
     public function setUp()
     {
+        $this->fail('Not implemented - version break');
         $filePath = $this->getTestPath() . $this->testFile;
         file_exists($filePath) && unlink($filePath);
 

@@ -2,11 +2,12 @@
 /**
  * This file is part of Vegas Exporter package.
  *
- * @author Krzysztof Kaplon <krzysztof@kaplon.pl>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
- * 
+ * @homepage https://github.com/vegas-cmf/exporter
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code. * 
+ * file that was distributed with this source code. *
  */
 
 namespace Vegas\Exporter\Adapter;
@@ -14,35 +15,26 @@ namespace Vegas\Exporter\Adapter;
 interface AdapterInterface
 {
     /**
-     * Initializes data object for export.
-     * It must set up properties object as well.
-     * 
-     * @param array $data set of data to export
-     * @param type $useKeysAsHeaders uses array keys as headers for export data
+     * @param \Vegas\Exporter\ExportSettings $config
+     * @return $this
      */
-    public function init(array $data, $useKeysAsHeaders = false);
-    
+    public function setConfig(\Vegas\Exporter\ExportSettings $config);
+
     /**
-     * Exports data into file if output path was set.
-     * Forces file download otherwise.
+     * Gets Content-Type header for browser output
+     * @return string
      */
-    public function export();
-    
+    public function getContentType();
+
     /**
-     * Sets header rows for output data.
-     * It must be used before init in order to work.
-     * 
-     * @param array $headers
+     * Gets file extension including dot (e.x. .xls)
+     * @return string
      */
-    public function setHeaders(array $headers);
-    
+    public function getExtension();
+
     /**
-     * @param string
+     * Gets rendered export file data
+     * @return string
      */
-    public function setOutputPath($path);
-    
-    /**
-     * @param string $name
-     */
-    public function setFileName($name);
+    public function output();
 }

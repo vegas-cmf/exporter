@@ -2,121 +2,95 @@
 /**
  * This file is part of Vegas Exporter package.
  *
- * @author Mateusz Aniolek <matty201@gmail.com>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
- * 
+ * @homepage https://github.com/vegas-cmf/exporter
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code. * 
+ * file that was distributed with this source code. *
  */
 
 namespace Vegas\Exporter\Adapter;
 
+/**
+ * Class Csv
+ *
+ * Available extra settings to be provided:
+ * - separator: field separator, defaults to ','
+ * - lineSeparator: output line separator, defaults to PHP_EOL
+ * - quoteFields: whether to quote each field in "", defaults to false
+ * - skipHeaders: whether to skip printing headers, defaults to false
+ *
+ * @package Vegas\Exporter\Adapter
+ */
 class Csv extends AdapterAbstract
-{    
+{
+    const DEFAULT_SEPARATOR = ',';
+
     /**
-     * @var string
+     * Whether to quote fields in ""
+     * @var bool
      */
-    private $csv;
-        
-     /**
-     * Constructor. Initialize $config variable as instance of stdClass. First
-     * of all, contentSize and fileName are set as null and contentType is set to
-     * 'text/csv' so it points that exported file should be string type. Also 
-     * sets default separators. For new line - ';', and for next value - ','.
+    protected $quoteFields;
+
+    /**
+     * {@inheritdoc}
      */
-    public function __construct()
+    public function getContentType()
     {
-        $this->contentType = 'text/csv';
-        $this->fileName = "tests/fixtures/export_file.csv";
-        
-        $this->lineSeparator = PHP_EOL;
-        $this->valueSeparator = ",";
+        return 'text/csv';
     }
 
     /**
-     * Sets data and create config object (stdClass). If keysAsHeaders are set to true,
-     * your data variable has to have header values in keys of each element. In 
-     * other case, when keysAsHeaders are set to false you have to give a header 
-     * value through setHeaders.
-     * 
-     * @param array $data raw data, given in array
-     * @param boolean $useKeysAsHeaders headers in file state
-     * @param char $value_separator separator between values
-     * @param char $nl_separator new line separator 
-     * @throws ExporterException
+     * {@inheritdoc}
      */
-    public function init(array $data, $useKeysAsHeaders = false)
+    public function getExtension()
     {
-        if($data == array()){
-            throw new Exception\DataNotFoundException();
-        }
-
-        if($useKeysAsHeaders){
-            $this->setHeaders(array_keys($data[0]));
-        } 
-        
-        if($this->headers != array()){
-            foreach($this->headers as $key){
-                $key = str_replace(array("\r", "\n"), "", strip_tags($key));
-                $this->csv .= $key . $this->valueSeparator;
-            }
-            
-            $separatorLength = (int)strlen($this->valueSeparator);
-            $this->csv = substr($this->csv, 0, -$separatorLength) . $this->lineSeparator;
-        }
-        
-        foreach($data as $item){
-            
-            foreach($item as $value){
-                $value = str_replace(array("\r", "\n"), "", strip_tags($value));
-                $this->csv .= $value . $this->valueSeparator;
-            }
-            $separatorLength = (int)strlen($this->valueSeparator);
-            $this->csv = substr($this->csv, 0, -$separatorLength) . $this->lineSeparator;
-            
-        }
-        
-        $this->contentSize = strlen($this->csv);
+        return '.csv';
     }
-    
-    /**
-     * Sets separator for new line/row
-     * 
-     * @param char $separator
-     */
-    public function setNewLineSeparator($separator)
-    {
-        $this->lineSeparator = $separator;
-    }
-    
-    /**
-     * Sets separator for value/new column
-     * @param char $separator
-     */
-    public function setValueSeparator($separator)
-    {
-        $this->valueSeparator = $separator;
-    }
-    
 
     /**
-     * Override abstract function from parent. It sets fileName in previously
-     * set up instance of stdClass, and do file_put_contents to save csv file
-     * 
-     * @throws ExporterException
+     * {@inheritdoc}
      */
-    protected function exportFile()
+    public function output()
     {
-        file_put_contents($this->outputPath . $this->fileName, $this->csv);
+        $extraSettings = $this->config->getExtraSettings();
+
+        $separator = isset($extraSettings['separator']) ? $extraSettings['separator'] : self::DEFAULT_SEPARATOR;
+        $lineSeparator = isset($extraSettings['lineSeparator']) ? $extraSettings['lineSeparator'] : PHP_EOL;
+        $this->quoteFields = isset($extraSettings['quoteFields']) && $extraSettings['quoteFields'];
+
+        $output = '';
+
+        if (!isset($extraSettings['skipHeaders'])) {
+            $output .= implode($separator, $this->getCsvItem($this->config->getHeaders())) . $lineSeparator;
+        }
+
+        $data = $this->config->getData();
+//        FIXME unify behavior
+//        if (empty($data)) {
+//            throw new Exception\DataNotFoundException();
+//        }
+
+        foreach ($data as $item) {
+            $item = $this->getRawItem($item);
+            $output .= implode($separator, $this->getCsvItem($item)) . $lineSeparator;
+        }
+        return $output;
     }
-    
+
     /**
-     * Sends generated CSV into to the browser.
+     * Quotes CSV line output when needed
+     * @param array $fields
+     * @return array
      */
-    public function download()
+    private function getCsvItem(array $fields)
     {
-        $this->setDownloadHttpHeaders();
-        
-        echo $this->csv;
+        if (!$this->quoteFields) {
+            return $fields;
+        }
+        return array_map(function($field) {
+            '"' . str_replace('"', '""', $field) . '"';
+        }, $fields);
     }
 }

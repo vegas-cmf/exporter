@@ -25,6 +25,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     
     protected function setUp()
     {
+        $this->fail('Not implemented - version break');
         $csv = new Csv();
         $this->defaultNewLineSeparator = ';';
         $csv->setNewLineSeparator(';');

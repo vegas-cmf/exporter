@@ -1,132 +1,93 @@
-<?php 
-
+<?php
 /**
  * This file is part of Vegas Exporter package.
  *
- * @author Mateusz Aniołek <matty201@gmail.com>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
- * 
+ * @homepage https://github.com/vegas-cmf/exporter
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code. * 
+ * file that was distributed with this source code. *
  */
 
 namespace Vegas\Exporter\Adapter;
 
+/**
+ * Class Xls
+ * @package Vegas\Exporter\Adapter
+ */
 class Xls extends AdapterAbstract
-{    
+{
     /**
-     * Holds data for exportData function
-     * @var array 
+     * {@inheritdoc}
      */
-    private $data;
-    
-    /**
-     * Variable contains PHPExcel object 
-     * @var PHPExcel 
-     */
-    private $xls;
-
-    /**
-     * Variable contains the binary content of the xls file
-     *
-     * @var string
-     */
-    private $content;
-    
-    /**
-     * Constructor. Initialize $config variable as instance of stdClass. First 
-     * of all, contentSize and fileName are set as null and contentType is set to 
-     * 'application/vnd.ms-excel' so it points that exported file should be xls type.
-     * Initialize $xls variable as instance of PHPExcel() and sets active sheet 
-     * index to 0
-     */
-    public function __construct()
+    public function getContentType()
     {
-        $this->fileName = 'tests/fixtures/export_file.xls';
-        $this->contentType = 'application/vnd.ms-excel';
+        return 'application/vnd.ms-excel';
     }
 
     /**
-     * Sets data and create config object (stdClass). If keysAsHeaders are set to true, 
-     * your data variable has to have header values in keys of each element. In 
-     * other case, when keysAsHeaders are set to false you have to give a header 
-     * value through setHeaders.
-     * 
-     * Generates worksheet for xls file. In addition, it saves temporary our 
-     * file to get content length. It's necessary to download file.
-     * 
-     * @param array $data
-     * @param boolean $useKeysAsHeaders
-     * @throws Exception\DataNotFoundException
-     * @throws Exception\InvalidArgumentTypeException
+     * {@inheritdoc}
      */
-    public function init(array $data, $useKeysAsHeaders = false)
+    public function getExtension()
     {
-        if($data == array()){
-            throw new Exception\DataNotFoundException();
-        }
-        
-        $this->xls = new \PHPExcel();
-        $this->xls->setActiveSheetIndex(0);
-        
-        $i = 1;
-        $column = 'A';
-        
-        $sheet = $this->xls->getActiveSheet();
-        
-        if ($useKeysAsHeaders) {
-            $this->setHeaders(array_keys($data[0]));
-        }
+        return '.xls';
+    }
 
-        foreach($this->headers as $key){
-            if (!is_string($key)){
-                throw new Exception\InvalidHeadersDataException();
-            }
-            $sheet->getCell($column . $i)->setValue($key);
+    /**
+     * {@inheritdoc}
+     */
+    public function output()
+    {
+        $extraSettings = $this->config->getExtraSettings();
+
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = true;
+
+        $root = isset($extraSettings['rootName']) ? $extraSettings['rootName'] : self::DEFAULT_ROOT_NAME;
+        $node = isset($extraSettings['nodeName']) ? $extraSettings['nodeName'] : self::DEFAULT_NODE_NAME;
+        $documentTree = $dom->createElement($root);
+
+        $data = $this->config->getData();
+        //        FIXME unify behavior
+        //        if (empty($data)) {
+        //            throw new Exception\DataNotFoundException();
+        //        }
+
+        $xls = new \PHPExcel;
+        $xls->setActiveSheetIndex(0);
+        $sheet = $xls->getActiveSheet();
+
+        $row = 1;
+        $column = 'A';
+        foreach ($this->config->getHeaders() as $header) {
+            $sheet->setCellValue($column . $row, $header);
             ++$column;
         }
-        $i++;
+        ++$row;
 
-        foreach($data as $item){
+        foreach ($data as $item) {
             $column = 'A';
-            foreach($item as $value){
-                if (!is_string($value)){
-                    throw new Exception\InvalidArgumentTypeException();
-                }
-                $sheet->getCell($column . $i)->setValue($value);
+            foreach ($this->getRawItem($item) as $value) {
+                $sheet->setCellValue($column . $row, $value);
                 ++$column;
             }
-            $i++;
+            ++$row;
         }
 
-        $temporary_file = '/tmp/'.uniqid().'.xls';
-        if(!empty($this->outputPath)) {
-            $temporary_file = $this->outputPath .uniqid() . '.xls';
-        }
-        $writer = new \PHPExcel_Writer_Excel2007($this->xls);
-        $writer->save($temporary_file);
-        $this->content = file_get_contents($temporary_file);
-        $this->contentSize = filesize($temporary_file);
-        unlink($temporary_file);
+        return $this->getBuffer($xls);
     }
-    
-    /**
-     * It sets fileName to previously set up instance of stdClass
-     * and use private method saveExcel()
-     */
-    public function exportFile()
-    {
-        $writer = new \PHPExcel_Writer_Excel2007($this->xls);
-        $writer->save($this->outputPath . $this->fileName);
-    }
-    
-    /**
-     * Sends generated XLS into to the browser.
-     */
-    public function download()
-    {
-        $this->setDownloadHttpHeaders();
 
-        echo $this->content;
+    /**
+     * Dumps XLS file to memory & retrieves content
+     * @param \PHPExcel $xls
+     * @return string
+     */
+    private function getBuffer(\PHPExcel $xls)
+    {
+        ob_start();
+        $writer = new \PHPExcel_Writer_Excel2007($xls);
+        $writer->save('php://output');
+        return ob_get_clean();
     }
 }

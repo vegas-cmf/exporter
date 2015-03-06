@@ -12,9 +12,9 @@
 
 namespace Vegas\Exporter\Adapter\Exception;
 
-use Vegas\Exporter\Adapter\Exception;
+use \Vegas\Exporter\Adapter\Exception as ExporterException;
 
-class OutputPathNotWritableException extends Exception
+class OutputPathNotWritableException extends ExporterException
 {
     protected $message = 'Output path is not writable';
 }
