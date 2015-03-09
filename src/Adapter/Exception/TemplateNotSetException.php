@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Vegas\Exporter\Exception;
+namespace Vegas\Exporter\Adapter\Exception;
 
 use Vegas\Exporter\Adapter\Exception as ExporterException;
 

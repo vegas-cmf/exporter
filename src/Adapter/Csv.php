@@ -68,10 +68,11 @@ class Csv extends AdapterAbstract
 
         $data = $this->config->getData();
 
-        foreach ($data as $item) {
+        $lines = array_map(function($item) use ($separator) {
             $item = $this->getRawItem($item);
-            $output .= implode($separator, $this->getCsvItem($item)) . $lineSeparator;
-        }
+            return implode($separator, $this->getCsvItem($item));
+        }, $data);
+        $output .= implode($lineSeparator, $lines);
         return $output;
     }
 
@@ -86,7 +87,7 @@ class Csv extends AdapterAbstract
             return $fields;
         }
         return array_map(function($field) {
-            '"' . str_replace('"', '""', $field) . '"';
+            return '"' . str_replace('"', '""', $field) . '"';
         }, $fields);
     }
 }
