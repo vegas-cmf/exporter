@@ -62,15 +62,11 @@ class Csv extends AdapterAbstract
 
         $output = '';
 
-        if (!isset($extraSettings['skipHeaders'])) {
+        if (empty($extraSettings['skipHeaders'])) {
             $output .= implode($separator, $this->getCsvItem($this->config->getHeaders())) . $lineSeparator;
         }
 
         $data = $this->config->getData();
-//        FIXME unify behavior
-//        if (empty($data)) {
-//            throw new Exception\DataNotFoundException();
-//        }
 
         foreach ($data as $item) {
             $item = $this->getRawItem($item);

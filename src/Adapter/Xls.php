@@ -39,24 +39,14 @@ class Xls extends AdapterAbstract
      */
     public function output()
     {
-        $extraSettings = $this->config->getExtraSettings();
-
-        $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->formatOutput = true;
-
-        $root = isset($extraSettings['rootName']) ? $extraSettings['rootName'] : self::DEFAULT_ROOT_NAME;
-        $node = isset($extraSettings['nodeName']) ? $extraSettings['nodeName'] : self::DEFAULT_NODE_NAME;
-        $documentTree = $dom->createElement($root);
-
         $data = $this->config->getData();
-        //        FIXME unify behavior
-        //        if (empty($data)) {
-        //            throw new Exception\DataNotFoundException();
-        //        }
 
         $xls = new \PHPExcel;
         $xls->setActiveSheetIndex(0);
         $sheet = $xls->getActiveSheet();
+
+        $title = $this->config->getTitle();
+        is_string($title) && $sheet->setTitle($title);
 
         $row = 1;
         $column = 'A';

@@ -136,6 +136,7 @@ class Exporter implements InjectionAwareInterface
         }
 
         $adapter->setConfig($this->config);
+        $adapter->validateOutput();
 
         return $adapter;
     }

@@ -38,9 +38,14 @@ class ExportSettings
     protected $extraSettings = [];
 
     /**
-     * @var \Vegas\Mvc\View
+     * @var string
      */
     protected $template;
+
+    /**
+     * @var string
+     */
+    protected $title;
 
     /**
      * @var string
@@ -66,7 +71,7 @@ class ExportSettings
      */
     public function setData(array $data = [])
     {
-        $this->data;
+        $this->data = $data;
         return $this;
     }
 
@@ -93,13 +98,24 @@ class ExportSettings
     }
 
     /**
-     * Sets HTML view template to render provided data in a decorated way
-     * @param \Vegas\Mvc\View $template
+     * Sets HTML view template path to render provided data in a decorated way
+     * @param string $template
      * @return $this
      */
     public function setTemplate($template)
     {
         $this->template = $template;
+        return $this;
+    }
+
+    /**
+     * Allows to specify a title of exported document, where available
+     * @param string $title
+     * @return $this
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
         return $this;
     }
 
@@ -160,11 +176,19 @@ class ExportSettings
     }
 
     /**
-     * @return \Vegas\Mvc\View
+     * @return string
      */
     public function getTemplate()
     {
         return $this->template;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
     }
 
     /**

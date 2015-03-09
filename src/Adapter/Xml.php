@@ -59,10 +59,6 @@ class Xml extends AdapterAbstract
         $documentTree = $dom->createElement($root);
 
         $data = $this->config->getData();
-        //        FIXME unify behavior
-        //        if (empty($data)) {
-        //            throw new Exception\DataNotFoundException();
-        //        }
 
         $headers = $this->config->getHeaderParams();
         foreach ($data as $item) {

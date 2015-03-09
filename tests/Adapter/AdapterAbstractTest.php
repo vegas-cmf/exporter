@@ -16,7 +16,7 @@ class AdapterAbstractTest extends \PHPUnit_Framework_TestCase
         $this->fail('Not implemented - version break');
         $this->obj = $this->getMockForAbstractClass('\Vegas\Exporter\Adapter\AdapterAbstract');
     }
-    
+
     public function tearDown()
     {
         $this->obj = null;

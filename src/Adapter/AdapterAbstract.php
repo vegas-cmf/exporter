@@ -34,7 +34,7 @@ abstract class AdapterAbstract implements AdapterInterface
      * @throws Exception\InvalidArgumentTypeException
      * @throws Exception\OutputPathNotWritableException
      */
-    protected function validateOutput()
+    public function validateOutput()
     {
         $headers = $this->config->getHeaders();
         if (empty($headers)) {
@@ -48,6 +48,12 @@ abstract class AdapterAbstract implements AdapterInterface
         if (!is_string($this->config->getFilename())) {
             throw new Exception\InvalidArgumentTypeException;
         }
+
+        //$data = $this->config->getData();
+        //FIXME do we need this?
+        //if (empty($data)) {
+        //  throw new Exception\DataNotFoundException();
+        //}
     }
 
     /**

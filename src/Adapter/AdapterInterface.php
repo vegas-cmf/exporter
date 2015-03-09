@@ -33,6 +33,13 @@ interface AdapterInterface
     public function getExtension();
 
     /**
+     * Verifies settings before printing output. Throws appropriate exceptions when configuration is incomplete or invalid.
+     * @return void
+     * @throws \Vegas\Exception
+     */
+    public function validateOutput();
+
+    /**
      * Gets rendered export file data
      * @return string
      */
