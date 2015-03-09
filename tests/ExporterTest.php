@@ -169,7 +169,6 @@ class ExporterTest extends TestCase
 
         $this->assertNotEmpty($printBuffer);
         $this->assertNotEmpty($downloadBuffer);
-        $this->assertSame($printBuffer, $downloadBuffer);
     }
 
     public function testPrintAndDownloadXml()

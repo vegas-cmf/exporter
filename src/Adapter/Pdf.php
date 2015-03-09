@@ -132,8 +132,9 @@ class Pdf extends AdapterAbstract
      */
     private function getRenderedView()
     {
-        $view = \Phalcon\DI::getDefault()->get('view');
-        if (empty($view)) {
+        try {
+            $view = \Phalcon\DI::getDefault()->get('view');
+        } catch (\Phalcon\DI\Exception $e) {
             throw new \Vegas\Mvc\Exception;
         }
 

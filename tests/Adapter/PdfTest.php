@@ -88,6 +88,20 @@ class PdfTest extends TestCase
         $this->assertEmpty($sideEffectsBuffer);
     }
 
+    public function testAdapterRequiresViewRenderer()
+    {
+        $this->adapter->validateOutput();
+
+        $this->getDI()->remove('view');
+
+        try {
+            $this->adapter->output();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Mvc\Exception', $e);
+        }
+    }
+
     public function testValidCustomExtraSettings()
     {
         $this->config->setExtraSettings([

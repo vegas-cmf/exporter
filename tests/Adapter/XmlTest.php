@@ -87,4 +87,50 @@ XML;
 
         $this->assertSame($prettyPrintXml, rtrim($buffer, PHP_EOL));
     }
+
+    public function testOutputHeadersWithoutValue()
+    {
+        $this->config->setHeaders([
+            'foo', 'bar', 'no_value'
+        ]);
+        $buffer = $this->adapter->output();
+
+        $prettyPrintXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <foo>zażółć gęślą</foo>
+    <bar>jaźń</bar>
+    <no_value></no_value>
+  </item>
+</root>
+XML;
+
+        $this->assertSame($prettyPrintXml, rtrim($buffer, PHP_EOL));
+    }
+
+    public function testUseObjectDataForOutput()
+    {
+        $object = new \stdClass;
+        $object->bar = 'zażółć gęślą';
+        $object->foo = 'jaźń';
+
+        $this->config->setHeaders(['foo', 'bar', 'empty']);
+        $this->config->setData([$object]);
+
+        $buffer = $this->adapter->output();
+
+        $prettyPrintXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <foo>jaźń</foo>
+    <bar>zażółć gęślą</bar>
+    <empty></empty>
+  </item>
+</root>
+XML;
+
+        $this->assertSame($prettyPrintXml, rtrim($buffer, PHP_EOL));
+    }
 }

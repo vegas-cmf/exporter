@@ -72,6 +72,6 @@ class Xml extends AdapterAbstract
         }
         $dom->appendChild($documentTree);
 
-        return $dom->saveXML();
+        return $dom->saveXML(null, LIBXML_NOEMPTYTAG);
     }
 }
