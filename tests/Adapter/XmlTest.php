@@ -1,10 +1,10 @@
 <?php
-
 /**
- * This file is part of Vegas Exporter package
+ * This file is part of Vegas Exporter package.
  *
- * @author Mateusz Aniołek <matty201@gmail.com>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
+ * @homepage https://github.com/vegas-cmf/exporter
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,177 +12,125 @@
 
 namespace Vegas\Tests\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\Xml as Xml;
+use Vegas\Exporter\Adapter\Xml;
+use Vegas\Test\TestCase;
 
-class XmlTest extends \PHPUnit_Framework_TestCase {
-
-    private $obj;
-
-    protected function setUp()
-    {
-        $xml = new Xml();
-        $this->obj = new \Vegas\Exporter\Exporter($xml);
-    }
-
-    protected function tearDown()
-    {
-        $this->obj = null;
-
-        if (file_exists('test.xml')){
-            unlink('test.xml');
-        }
-    }
-    
+class XmlTest extends TestCase
+{
     /**
-     * @param string $name
-     * @param string $lastname
-     * @param string $age
+     * @var \Vegas\Exporter\ExportSettings
      */
-    public function testXmlExport()
-    {
-        $exportData = array(array("John", "Smith", "19"));
-        $fileName = 'test.xml';
-        $outputPath = '/tmp/';
-        
-        $this->obj->setHeaders(array('name', 'lastname', 'age'));
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->init($exportData);
-        $this->obj->run();
+    private $config;
 
-        $this->assertSame(file_get_contents($outputPath . $fileName), $this->xmlCreate($exportData, array('name', 'lastname', 'age')));
-    }
-    
     /**
-     * @dataProvider xmlExportWithoutHeadersProvider
-     * @param string $exportData
+     * @var \Vegas\Exporter\Adapter\AdapterInterface
      */
-    public function testXmlExportWithoutHeaders($exportData)
-    {
-        $fileName = 'test.xml';
-        $outputPath = '/tmp/';
-        $this->obj->init($exportData, true);
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->run($fileName);
+    private $adapter;
 
-        $this->assertSame(file_get_contents($outputPath . $fileName), $this->xmlCreate($exportData));
-
-    } 
-    
-    public function xmlExportWithoutHeadersProvider()
-    {
-        return array(
-            array(
-                array(
-                    array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
-                    array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
-                    array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
-                )
-            )
-        );
-    }
-    
-    public function testXmlInitWithoutData()
-    {
-        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\DataNotFoundException');
-        $this->obj->init(array());
-        $this->obj->init(array(array()));
-        $this->obj->init(array(null));
-    } 
-
-    
-    public function testXmlHtmlTagsDataGiven()
-    {
-        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\HtmlTagsFoundException');
-        
-        $exportData = array(array("<a>John</a>", "Smith", "19"));
-        $fileName = 'test.xml';
-        $outputPath = '/tmp/';
-        
-        $this->obj->setHeaders(array('name', 'lastname', 'age'));
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->init($exportData);
-    } 
-    
-    public function testXmlHtmlTagsHeaderGiven()
-    {
-        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\HtmlTagsFoundException');
-        
-        $exportData = array(array("John", "Smith", "19"));
-        $fileName = 'test.xml';
-        $outputPath = '/tmp/';
-        
-        $this->obj->setHeaders(array('<b>name</b>', 'lastname', 'age'));
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->init($exportData);
-    } 
-    
-    public function testXmlInvalidDataGiven()
-    {
-        $this->setExpectedException('Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
-        
-        $exportData = array(array(array(), "Smith", "19"));
-        $fileName = 'test.xml';
-        $outputPath = '/tmp/';
-        
-        $this->obj->setHeaders(array('name', 'lastname', 'age'));
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->init($exportData);
-    } 
-    
     /**
-     * @dataProvider xmlExportWithHeadersProvider
-     * @param string $exportData
+     * @return \Vegas\Exporter\ExportSettings
      */
-    public function testXmlExportWithHeaders($exportData)
+    private function createExportConfig()
     {
-        $fileName = 'test.xml';
-        $outputPath = '/tmp/';
-        $this->obj->setHeaders(array('name', 'lastname', 'age'));  
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->init($exportData, false);    
-        $this->obj->run($fileName);
+        $headers = ['foo', 'bar'];
 
-        $this->assertSame(file_get_contents($outputPath . $fileName), $this->xmlCreate($exportData, array('name', 'lastname', 'age')));
+        $exportData = [
+            ['foo' => 'zażółć gęślą', 'bar' => 'jaźń']
+        ];
 
-    }
-       
-    public function xmlExportWithHeadersProvider()
-    {
-        return array(
-            array(
-                array(
-                    array("John", "Smith", "19"),
-                    array("Paul", "Smith2", "36"),
-                    array("Adam", "Smit3", "14"),
-                )
-            )
-        );
+        return (new \Vegas\Exporter\ExportSettings)
+            ->setHeaders($headers)
+            ->setData($exportData);
     }
 
-    private function xmlCreate($exportData, $keys = null)
+    public function setUp()
     {
-        $this->obj = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root>";
+        parent::setUp();
 
-        foreach ($exportData as $items) {
-            $this->obj .='<item>';
-            foreach ($items as $key => $value) {
-                
-                if(!is_array($keys)){
-                    $this->obj .= '<' . $key . '>' . $value . '</' . $key . '>';
-                } else {
-                    $this->obj .= '<' . $keys[$key] . '>' . $value . '</' . $keys[$key] . '>';
-                }
-            }
-            $this->obj .='</item>';
-        }
+        $this->config = $this->createExportConfig();
 
-        $this->obj .= "</root>\n";
-        return $this->obj;
+        $this->adapter = new Xml;
+        $this->adapter->setConfig($this->config);
+    }
+
+    public function tearDown()
+    {
+        $this->exporter = null;
+        $this->config = null;
+    }
+
+    public function testOutputGivesNoSideEffects()
+    {
+        $this->adapter->validateOutput();
+
+        ob_start();
+        $buffer = $this->adapter->output();
+        $sideEffectsBuffer = ob_get_clean();
+
+        $this->assertNotEmpty($buffer);
+        $this->assertEmpty($sideEffectsBuffer);
+    }
+
+    public function testOutput()
+    {
+        $buffer = $this->adapter->output();
+
+        $prettyPrintXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <foo>zażółć gęślą</foo>
+    <bar>jaźń</bar>
+  </item>
+</root>
+XML;
+
+        $this->assertSame($prettyPrintXml, rtrim($buffer, PHP_EOL));
+    }
+
+    public function testOutputHeadersWithoutValue()
+    {
+        $this->config->setHeaders([
+            'foo', 'bar', 'no_value'
+        ]);
+        $buffer = $this->adapter->output();
+
+        $prettyPrintXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <foo>zażółć gęślą</foo>
+    <bar>jaźń</bar>
+    <no_value></no_value>
+  </item>
+</root>
+XML;
+
+        $this->assertSame($prettyPrintXml, rtrim($buffer, PHP_EOL));
+    }
+
+    public function testUseObjectDataForOutput()
+    {
+        $object = new \stdClass;
+        $object->bar = 'zażółć gęślą';
+        $object->foo = 'jaźń';
+
+        $this->config->setHeaders(['foo', 'bar', 'empty']);
+        $this->config->setData([$object]);
+
+        $buffer = $this->adapter->output();
+
+        $prettyPrintXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>
+    <foo>jaźń</foo>
+    <bar>zażółć gęślą</bar>
+    <empty></empty>
+  </item>
+</root>
+XML;
+
+        $this->assertSame($prettyPrintXml, rtrim($buffer, PHP_EOL));
     }
 }

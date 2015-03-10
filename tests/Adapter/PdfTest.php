@@ -1,190 +1,178 @@
 <?php
+/**
+ * This file is part of Vegas Exporter package.
+ *
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
+ * @copyright Amsterdam Standard Sp. Z o.o.
+ * @homepage https://github.com/vegas-cmf/exporter
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace Vegas\Tests\Exporter\Adapter;
 
-use \Vegas\Exporter\Adapter\Pdf;
+use Vegas\Exporter\Adapter\Pdf;
+use Vegas\Test\TestCase;
 
-class PdfTest extends \PHPUnit_Framework_TestCase
+class PdfTest extends TestCase
 {
     /**
-     * @var Pdf
+     * @var \Vegas\Exporter\ExportSettings
      */
-    private $obj;
+    private $config;
 
     /**
-     * @var string
+     * @var \Vegas\Exporter\Adapter\AdapterInterface
      */
-    private $testFile = 'test.pdf';
+    private $adapter;
 
     /**
-     * @return string
+     * @return \Vegas\Exporter\ExportSettings
      */
-    private function getTestPath()
+    private function createExportConfig()
     {
-        return sys_get_temp_dir() . DIRECTORY_SEPARATOR;
+        $headers = ['foo', 'bar'];
+
+        $exportData = [
+            ['foo' => 1, 'bar' => 2],
+            ['bar' => 11, 'foo' => 22],
+            ['foo' => 111, 'bar' => 222],
+            ['foo' => 'zażółć gęślą', 'bar' => 'jaźń']
+        ];
+
+        return (new \Vegas\Exporter\ExportSettings)
+            ->setTemplate('export_sample')
+            ->setTitle('Sample PDF export') // optional
+            ->setHeaders($headers)
+            ->setData($exportData);
     }
 
-    /**
-     * @return string
-     */
-    private function getTestFilePath()
+    private function setUpDI()
     {
-        return $this->getTestPath() . $this->testFile;
+        $di = $this->getDI();
+
+        $di->set('view', function() use ($di) {
+            $view = new \Vegas\Mvc\View($di->get('config')->application->view->toArray());
+            $path = $di->get('config')->application->moduleDir . 'Test/views';
+            file_exists($path) && $view->setViewsDir($path);
+            return $view;
+        }, true);
+
+        $di->set('exporter', function() use ($di) {
+            $exporter = new \Vegas\Exporter\Exporter;
+            return $exporter->setDI($di);
+        }, true);
     }
     
     public function setUp()
     {
-        $filePath = $this->getTestPath() . $this->testFile;
-        file_exists($filePath) && unlink($filePath);
+        parent::setUp();
+        $this->setUpDI();
 
-        $pdf = new Pdf();
-        $this->obj = new \Vegas\Exporter\Exporter($pdf);
+        $this->config = $this->createExportConfig();
+
+        $this->adapter = new Pdf;
+        $this->adapter->setConfig($this->config);
+        $this->getDI()->get('exporter')->setConfig($this->config);
     }
     
     public function tearDown()
     {
-        $this->obj = null;
+        $this->adapter = null;
+        $this->config = null;
     }
-    
-    /**
-     * @dataProvider initDataEmptyExceptionProvider
-     */
-    public function testInitDataEmptyException($exportData)
-    {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\ExportDataEmptyException');
-        $this->obj->init($exportData);
-    }
-    
-    public function initDataEmptyExceptionProvider()
-    {
-        return [
-            // #0
-            [[1]],
-            // #1
-            [[null]],
-            // #2
-            [[new \stdClass()]],
-            // #3
-            [[]],
-        ];
-    }
-    
-    public function testInitSuccess()
-    {
-        $this->assertInstanceOf('\Vegas\Exporter\Exporter', $this->obj);
-        
-        $exportData = [
-            [1, 2],
-            [11, 22],
-            [111, 222],
-        ];
-        
-        $this->obj->init($exportData);
-    }
-    
-    public function testExportFileWithoutHeaders()
-    {
-        $exportData = [
-            [1, 2],
-            [11, 22],
-            [111, 222],
-        ];
-        
-        $this->obj->init($exportData);
-        
-        $this->obj->setOutputPath($this->getTestPath());
-        $this->obj->setFileName($this->testFile);
-        $this->obj->run();
-        
-        $this->assertFileExists($this->getTestFilePath());
-    }
-    
-    public function testExportFileWithtHeadersSetFromMethod()
-    {
-        $headers = ['foo', 'bar'];
-        $outputFilePath = $this->getTestFilePath();
-        
-        $exportData = [
-            [1, 2],
-            [11, 22],
-            [111, 222],
-            ['zażółć gęślą', 'jaźń']
-        ];
-        
-        $this->obj->setHeaders($headers);
-        $this->obj->setOutputPath($this->getTestPath());
-        $this->obj->setFileName($this->testFile);
-        
-        $this->obj->init($exportData);
-        $this->obj->run();
-        
-        $this->assertFileExists($outputFilePath);
 
-        unset($outputFilePath);
-    }
-    
-    public function testExportFileWithtHeadersSetFromArgument()
+    public function testOutputGivesNoSideEffects()
     {
-        $outputFilePath = $this->getTestFilePath();
-        
-        $exportData = [
-            ['foo', 'bar'],
-            [1, 2],
-            [11, 22],
-            [111, 222],
-            ['zażółć gęślą', 'jaźń']
-        ];
-        
-        $this->obj->setOutputPath($this->getTestPath());
-        $this->obj->setFileName($this->testFile);
-        
-        $this->obj->init($exportData);
-        $this->obj->run();
-        
-        $this->assertFileExists($outputFilePath);
-        
-        unset($outputFilePath);
+        $this->adapter->validateOutput();
+
+        ob_start();
+        $buffer = $this->adapter->output();
+        $sideEffectsBuffer = ob_get_clean();
+
+        $this->assertNotEmpty($buffer);
+        $this->assertEmpty($sideEffectsBuffer);
     }
-    
-    public function testSetPageSizeException()
+
+    public function testAdapterRequiresViewRenderer()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidPageSizeException');
-        $this->obj->setPageSize('foo');
+        $this->adapter->validateOutput();
+
+        $this->getDI()->remove('view');
+
+        try {
+            $this->adapter->output();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Mvc\Exception', $e);
+        }
     }
-    
-    public function testSetPageOrientation()
+
+    public function testValidCustomExtraSettings()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidPageOrientationException');
-        $this->obj->setPageOrientation('bar');
+        $this->config->setExtraSettings([
+            'fontSize'          => 10,
+            'fontFamily'        => Pdf::FONT_FAMILY_HELVETICA,
+            'pageOrientation'   => Pdf::PAGE_ORIENTATION_LANDSCAPE,
+            'pageSize'          => Pdf::PAGE_SIZE_A5
+        ]);
+
+        $void = $this->adapter->validateOutput();
+        $this->assertEmpty($void);
     }
-    
-    public function testSetCellWidthException()
+
+    public function testInvalidCustomFontFamily()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidCellWidthException');
-        $this->obj->setCellWidth('baz');
+        $this->config->setExtraSettings([
+            'fontFamily' => 'Invalid font name',
+        ]);
+
+        try {
+            $this->adapter->validateOutput();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Exporter\Adapter\Exception\InvalidFontFamilyException', $e);
+        }
     }
-    
-    public function testSetCellHeightException()
+
+    public function testInvalidCustomPageOrientation()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidCellHeightException');
-        $this->obj->setCellHeight('fooo');
+        $this->config->setExtraSettings([
+            'pageOrientation' => 'Invalid page orientation',
+        ]);
+
+        try {
+            $this->adapter->validateOutput();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Exporter\Adapter\Exception\InvalidPageOrientationException', $e);
+        }
     }
-    
-    public function testSetFontSize()
+
+    public function testInvalidCustomPageSize()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidFontSizeException');
-        $this->obj->setFontSize('baar');
+        $this->config->setExtraSettings([
+            'pageSize'   => 'A20',
+        ]);
+
+        try {
+            $this->adapter->validateOutput();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Exporter\Adapter\Exception\InvalidPageSizeException', $e);
+        }
     }
-    
-    public function testSetFontFamily()
+
+    public function testMissingTemplateSettings()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidFontFamilyException');
-        $this->obj->setFontFamily('baaz');
-    }
-    
-    public function testSetFontStyle()
-    {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidFontStyleException');
-        $this->obj->setFontStyle('baaz');
+        $this->config->setTemplate(null);
+
+        try {
+            $this->adapter->validateOutput();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Exporter\Adapter\Exception\TemplateNotSetException', $e);
+        }
     }
 }

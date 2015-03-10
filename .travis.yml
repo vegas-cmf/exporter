@@ -12,6 +12,8 @@ before_script:
 script:
   - mkdir -p tests/fixtures/cache
   - mkdir -p tests/fixtures/tmp
+  - mkdir -p tests/fixtures/app/config
+  - mkdir -p tests/fixtures/app/services
   - mkdir -p build/logs
   - php vendor/bin/phpunit -c travis/phpunit.xml.dist
 

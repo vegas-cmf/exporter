@@ -1,10 +1,10 @@
 <?php
-
 /**
- * This file is part of Vegas Exporter package
+ * This file is part of Vegas Exporter package.
  *
- * @author Mateusz Aniołek <matty201@gmail.com>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
+ * @homepage https://github.com/vegas-cmf/exporter
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,124 +12,66 @@
 
 namespace Vegas\Tests\Exporter\Adapter;
 
-use Vegas\Exporter\Adapter\Xls as Xls;
+use Vegas\Exporter\Adapter\Xls;
+use Vegas\Test\TestCase;
 
-
-class XlsTest extends \PHPUnit_Framework_TestCase
+class XlsTest extends TestCase
 {
     /**
-     * @var Xls
+     * @var \Vegas\Exporter\ExportSettings
      */
-    private $obj;
-    
-    protected function setUp()
-    {
-        date_default_timezone_set('Europe/Warsaw');
-        
-        $xls = new Xls();
-        $this->obj = new \Vegas\Exporter\Exporter($xls);
-    }
-    
-    protected function tearDown()
-    {
-        $files = array('test.xls', 'tmp.xls');
-        
-        foreach($files as $value){
-            if (file_exists($value)){
-                unlink($value);
-            }
-        }
-    }
-    
-    public function testSaveWithHeader()
-    {
-        $fileName = 'test.xls';
-        $outputPath = '/tmp/';
-        $headers = array('name', 'lastname', 'age');
-
-        $exportData = array(
-            array("John", "Smith", "19"),
-            array("Sam", "Wozniacki", "36"),
-            array("Adam", "Ferrero", "14"),
-        );
-
-        $this->obj->setHeaders($headers);
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-        $this->obj->init($exportData);
-        $this->obj->run();
-
-        $this->assertFileExists($outputPath . $fileName);
-    }
+    private $config;
 
     /**
-     * @param string $exportData
+     * @var \Vegas\Exporter\Adapter\AdapterInterface
      */
-    public function testSaveWithoutHeader()
+    private $adapter;
+
+    /**
+     * @return \Vegas\Exporter\ExportSettings
+     */
+    private function createExportConfig()
     {
-        $exportData = array(
-            array('name' => "John", 'lastname' => "Smith", 'age' => "19"),
-            array('name' => "Paul", 'lastname' => "Smith2", 'age' => "36"),
-            array('name' => "Adam", 'lastname' => "Smit3", 'age' => "14"),
-        );
+        $headers = ['foo', 'bar'];
 
-        $fileName = 'test.xls';
-        $outputPath = '/tmp/';
+        $exportData = [
+            ['foo' => 1, 'bar' => 2],
+            ['bar' => 11, 'foo' => 22],
+            ['foo' => 111, 'bar' => 222],
+            ['foo' => 'zażółć gęślą', 'bar' => 'jaźń']
+        ];
 
-        $this->obj->setOutputPath($outputPath);
-        $this->obj->setFileName($fileName);
-
-        $this->obj->init($exportData, true);
-        $this->obj->run();
-
-        $this->assertFileExists($outputPath . $fileName);
+        return (new \Vegas\Exporter\ExportSettings)
+            ->setTitle('Sample XLS export') // optional
+            ->setHeaders($headers)
+            ->setData($exportData);
     }
 
-    public function testXlsNoDataGiven()
+    public function setUp()
     {
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\DataNotFoundException');
-        $this->obj->init(array());
+        parent::setUp();
+
+        $this->config = $this->createExportConfig();
+
+        $this->adapter = new Xls;
+        $this->adapter->setConfig($this->config);
     }
 
-    public function testXlsNoHeadersGiven()
+    public function tearDown()
     {
-        $exportData = array(
-            array(
-                array("John", "Smith", "19"),
-                array("Paul", "Smith2", "36"),
-                array("Adam", "Smit3", "14"),
-            )
-        );
-
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidHeadersDataException');
-        $this->obj->init($exportData, true);
+        $this->exporter = null;
+        $this->config = null;
     }
 
-    public function testXlsInvalidDataGiven()
+    public function testOutputGivesNoSideEffects()
     {
-        $exportData = array(
-            array(
-                array(array(), "Smith", "19"),
-                array("Paul", "Smith2", "36"),
-                array("Adam", "Smit3", "14"),
-            )
-        );
+        $this->adapter->validateOutput();
 
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
-        $this->obj->init($exportData);
-    }
+        ob_start();
+        $buffer = $this->adapter->output();
+        $sideEffectsBuffer = ob_get_clean();
 
-    public function testXlsNullDataGiven()
-    {
-        $exportData = array(
-            array(
-                array("John", "Smith", "19"),
-                array(null, "Smith2", "36"),
-                array("Adam", "Smit3", "14"),
-            )
-        );
-
-        $this->setExpectedException('\Vegas\Exporter\Adapter\Exception\InvalidArgumentTypeException');
-        $this->obj->init($exportData);
+        $this->assertNotEmpty($buffer);
+        $this->assertEmpty($sideEffectsBuffer);
     }
 }

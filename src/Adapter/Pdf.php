@@ -12,788 +12,170 @@
 
 namespace Vegas\Exporter\Adapter;
 
-use \Vegas\Exporter\Extension\Mpdf;
-
+/**
+ * Class Pdf
+ *
+ * Available extra settings to be provided:
+ * - pageOrientation: Portrait or Landscape, defaults to 'Portrait'
+ * - pageSize: selected page size of output, defaults to 'A4'
+ * - fontFamily: default font for for output, defaults to '' which is mPDF's default
+ * - fontSize: default font size for output, defaults to 0 which is mPDF's default
+ *
+ * @package Vegas\Exporter\Adapter
+ */
 class Pdf extends AdapterAbstract
 {
-    /**
-     * @var string
-     */
-    const EXPORT_TYPE_FILE = 'F';
-    
-    /**
-     * @var string
-     */
-    const EXPORT_TYPE_DOWNLOAD = 'D';
-    
-    /**
-     * @var string
-     */
-    const HEADER = 'header';
-    
-    /**
-     * @var string
-     */
-    const CONTENT = 'content';
-    
-    /**
-     * @var string
-     */
     const PAGE_SIZE_A3 = 'A3';
-    
-    /**
-     * @var string
-     */
     const PAGE_SIZE_A4 = 'A4';
-    
-    /**
-     * @var string
-     */
     const PAGE_SIZE_A5 = 'A5';
-    
-    /**
-     * @var string
-     */
-    const PAGE_SIZE_LETTER = 'LETTER';
-    
-    /**
-     * @var string
-     */
-    const PAGE_SIZE_LEGAL = 'LEGAL';
-    
-    /**
-     * @var string
-     */
+
     const PAGE_ORIENTATION_PORTRAIT = 'Portrait';
-            
-    /**
-     * @var string
-     */
     const PAGE_ORIENTATION_LANDSCAPE = 'Landscape';
-    
-            
-    /**
-     * @var string
-     */
-    const PAGE_MARGIN = 10;
-    
-    /**
-     * @var string
-     */
+
+    const FONT_FAMILY_DEFAULT = '';
     const FONT_FAMILY_COURIER = 'Courier';
-    
-    /**
-     * @var string
-     */
     const FONT_FAMILY_HELVETICA = 'Helvetica';
-    
-    /**
-     * @var string
-     */
     const FONT_FAMILY_ARIAL = 'Arial';
-    
-    /**
-     * @var string
-     */
     const FONT_FAMILY_TIMES = 'Times';
     
+    const FONT_SIZE_DEFAULT = 0;
+
     /**
-     * @var string
+     * {@inheritdoc}
      */
-    const FONT_STYLE_REGULAR = '';
-    
-    /**
-     * @var string
-     */
-    const FONT_STYLE_BOLD = 'B';
-    
-    /**
-     * @var string
-     */
-    const FONT_STYLE_ITALIC = 'I';
-    
-    /**
-     * @var string
-     */
-    const FONT_STYLE_UNDERLINE = 'U';
-    
-    /**
-     * @var integer
-     */
-    const FONT_SIZE = 10;
-    
-    /**
-     * @var integer
-     */
-    const CELL_WIDTH = 40;
-    
-    /**
-     * @var integer
-     */
-    const CELL_HEIGHT = 10;
-    
-    /**
-     * @var StdClass
-     */
-    private $config;
-    
-    /**
-     * @var Mpdf
-     */
-    private $pdf;
-    
-    /**
-     * @var integer
-     */
-    private $cursorX;
-    
-    /**
-     * @var integer
-     */
-    private $cursorY;
-    
-    public function __construct()
+    public function getContentType()
     {
-        $this->config = new \stdClass();
-        
-        $this->setConfig('contentType', 'application/pdf');
-        $this->setFileName('tests/fixtures/export_file.pdf');
-        
-        $this->setPageOrientation(self::PAGE_ORIENTATION_PORTRAIT);
-        $this->setPageSize(self::PAGE_SIZE_A4);
-        
-        $this->setCellWidth(self::CELL_WIDTH);
-        $this->setCellHeight(self::CELL_HEIGHT);
-        
-        $this->setFontSize(self::FONT_SIZE);
-        $this->setFontFamily(self::FONT_FAMILY_ARIAL);
-        $this->setFontStyle(self::FONT_STYLE_REGULAR);
-        
-        // Separate table header config
-        $this->config->header = new \stdClass();
-        $this->setHeaderFontStyle(self::FONT_STYLE_BOLD);
-        
-        // Separate table content config
-        $this->config->content = new \stdClass();
+        return 'application/pdf';
     }
-    
-    
+
     /**
-     * Initializes PDF object and preps data to export.
-     * 
-     * @param array $data
-     * @param type $useKeysAsHeaders
-     * @throws Exception\ExportDataEmptyException
+     * {@inheritdoc}
      */
-    public function init(array $data, $useKeysAsHeaders = false)
+    public function getExtension()
     {
-        if (empty($data[0]) || !is_array($data[0]))
-        {
-            throw new Exception\ExportDataEmptyException();
-        }
-        
-        if ($useKeysAsHeaders){
-            $this->setHeaders(array_keys($data[0]));
-        }
-        
-        $this->pdf = new Mpdf(
-            $this->getConfig('pageOrientation'),
-            'mm',
-            $this->getConfig('pageSize')
-        );
-        
-        $this->pdf->AddPage();
-        $this->cursorY = self::PAGE_MARGIN;
-        $this->cursorX = self::PAGE_MARGIN;
-        
-        // Export data headers
-        if (count($this->headers) > 0) {
-            $this->setFontStyles(self::HEADER);
-            $maxHeight = $this->addRow($this->headers, false);
-            $this->incrementCursorX($maxHeight);
+        return '.pdf';
+    }
+
+    /**
+     * @throws Exception\EmptyHeadersException
+     * @throws Exception\InvalidArgumentTypeException
+     * @throws Exception\InvalidFontFamilyException
+     * @throws Exception\InvalidPageOrientationException
+     * @throws Exception\InvalidPageSizeException
+     * @throws Exception\OutputPathNotWritableException
+     * @throws Exception\TemplateNotSetException
+     */
+    public function validateOutput()
+    {
+        parent::validateOutput();
+
+        $template = $this->config->getTemplate();
+        if (empty($template)) {
+            throw new Exception\TemplateNotSetException;
         }
 
-        $this->setFontStyles(self::CONTENT);
-        
-        // Export data conent
-        foreach ($data as $row) {
-            $this->addRow($row);
-        }
-    }
-    
-    /**
-     * @param string $target
-     */
-    private function setFontStyles($target)
-    {
-        $this->pdf->SetFont(
-            $this->getConfig('fontFamily', $target),
-            $this->getConfig('fontStyle', $target),
-            $this->getConfig('fontSize', $target)
-        );
-    }
-    
-    /**
-     * @param array $data
-     * @param boolean $incrementCursor
-     * @return integer
-     */
-    private function addRow(array $data, $incrementCursor = true)
-    {
-        if ($incrementCursor) {
-            $this->cursorX = self::PAGE_MARGIN;
-        }
-        
-        $maxHeight = $this->getMaxRowHeight($data);
-        $maxLinesNr = $this->getLinesCount($maxHeight);
-
-        foreach ($data as $text) {
-            $this->fillCell($maxHeight, $maxLinesNr, $text);
+        $extraSettings = $this->config->getExtraSettings();
+        if (isset($extraSettings['pageOrientation']) && !in_array($extraSettings['pageOrientation'], $this->getAvailablePageOrientation())) {
+            throw new Exception\InvalidPageOrientationException;
         }
 
-        if ($incrementCursor) {
-            $this->incrementCursorX($maxHeight);
-        }
-        
-        return $maxHeight;
-    }
-    
-    /**
-     * @param integer $value
-     */
-    private function incrementCursorX($value)
-    {
-        $this->cursorY += $value;
-    }
-    
-    /**
-     * @param integer $maxHeight
-     * @param integer $maxLinesNr
-     * @param string $text
-     */
-    private function fillCell($maxHeight, $maxLinesNr, $text)
-    {
-        $heightLeft =  $this->pdf->h - $this->cursorY - self::PAGE_MARGIN;
-        
-        if ($maxHeight > $heightLeft) {
-            $this->pdf->AddPage();
-            $this->cursorY = self::PAGE_MARGIN;
+        if (isset($extraSettings['pageSize']) && !in_array($extraSettings['pageSize'], $this->getAvailablePageSize())) {
+            throw new Exception\InvalidPageSizeException;
         }
 
-        $this->pdf->SetXY($this->cursorX, $this->cursorY);
+        if (isset($extraSettings['fontFamily']) && !in_array($extraSettings['fontFamily'], $this->getAvailableFontFamily())) {
+            throw new Exception\InvalidFontFamilyException;
+        }
+    }
 
-        $currentCellHeight = $this->getCellHeight($text);
-        $currentLinesNr = $this->getLinesCount($currentCellHeight);
-        $emptyLines = $maxLinesNr - $currentLinesNr;
+    /**
+     * {@inheritdoc}
+     */
+    public function output()
+    {
+        $extraSettings = $this->config->getExtraSettings();
 
-        // add empty lines if current cell has
-        // less text lines then highest cell in current row
-        if ($emptyLines > 0) {
-            $text .= str_repeat(PHP_EOL, $emptyLines + 1);
+        $pageOrientation = isset($extraSettings['pageOrientation']) ? $extraSettings['pageOrientation'] : self::PAGE_ORIENTATION_PORTRAIT;
+        $pageSize = isset($extraSettings['pageSize']) ? $extraSettings['pageSize'] : self::PAGE_SIZE_A4;
+        $fontSize = isset($extraSettings['fontSize']) ? $extraSettings['fontSize'] : self::FONT_SIZE_DEFAULT;
+        $fontFamily = isset($extraSettings['fontFamily']) ? $extraSettings['fontFamily'] : self::FONT_FAMILY_DEFAULT;
+
+        $mpdf = new \mPDF('utf-8', $pageSize, $fontSize, $fontFamily, 15, 15, 16, 16, 9, 9, $pageOrientation);
+
+        $title = $this->config->getTitle();
+        is_string($title) && $mpdf->SetTitle($title);
+
+        $mpdf->WriteHTML($this->getRenderedView());
+
+        return $this->getBuffer($mpdf);
+    }
+
+    /**
+     * Triggers the rendering process and gets result content as string
+     * @return string
+     * @throws \Vegas\Mvc\Exception
+     */
+    private function getRenderedView()
+    {
+        try {
+            $view = \Phalcon\DI::getDefault()->get('view');
+        } catch (\Phalcon\DI\Exception $e) {
+            throw new \Vegas\Mvc\Exception;
         }
 
-        $this->addCell($text);
+        $view->start();
+        $view->render($this->config->getTemplate(), null);
+        $view->finish();
 
-        $this->cursorX += $this->getConfig('cellWidth', self::CONTENT);
-    }
-    
-    /**
-     * @param array $row
-     * @return integer
-     */
-    private function getMaxRowHeight(array $row)
-    {
-        $height = 0;
-        foreach ($row as $text) {
-            
-            $currentHeight = $this->getCellHeight($text);
-            
-            if ($currentHeight > $height) {
-                $height = $currentHeight;
-            }
-        }
-
-        return $height;
-    }
-    
-    /**
-     * @param integer $height
-     * @return integer
-     */
-    private function getLinesCount($height)
-    {
-        return $height / $this->getConfig('cellHeight', self::CONTENT);
-    }
-    
-    /**
-     * @param string $text
-     */
-    private function addCell($text)
-    {
-        $this->pdf->MultiCell(
-            $this->getConfig('cellWidth', self::CONTENT),
-            $this->getConfig('cellHeight', self::CONTENT),
-            utf8_encode($text),
-            1,
-            'L',
-            false
-        );
-    }
-    
-    /**
-     * @param string $text
-     */
-    private function getCellHeight($text)
-    {
-        return $this->pdf->GetMultiCellHeight(
-            $this->getConfig('cellWidth', self::CONTENT),
-            $this->getConfig('cellHeight', self::CONTENT),
-            utf8_encode($text),
-            1,
-            'L',
-            false
-        );
+        return $view->getContent();
     }
 
+    /**
+     * Dumps PDF file to memory & retrieves content
+     * @param \mPDF $mpdf
+     * @return string
+     */
+    private function getBuffer(\mPDF $mpdf)
+    {
+        ob_start();
+        $mpdf->Output('php://output');
+        return ob_get_clean();
+    }
 
     /**
-     * Exports PDF file.
+     * @return array
      */
-    protected function exportFile()
+    private function getAvailablePageOrientation()
     {
-        $outputFilePath = $this->outputPath . $this->fileName;
-        
-        $this->pdf->Output($outputFilePath, self::EXPORT_TYPE_FILE);
+        return [
+            self::PAGE_ORIENTATION_LANDSCAPE,
+            self::PAGE_ORIENTATION_PORTRAIT
+        ];
     }
-    
+
     /**
-     * Sends PDF file into the browser.
+     * @return array
      */
-    public function download()
+    private function getAvailablePageSize()
     {
-        $this->pdf->Output(
-            $this->fileName,
-            self::EXPORT_TYPE_DOWNLOAD
-        );
-    }
-    
-    /**
-     * Sets PDF pages size.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - PAGE_SIZE_A3
-     * - PAGE_SIZE_A4
-     * - PAGE_SIZE_A5
-     * - PAGE_SIZE_LETTER
-     * - PAGE_SIZE_LEGAL
-     * 
-     * @param string $size
-     * @return obj
-     * @throws \Exception\InvalidPageSizeException
-     */
-    public function setPageSize($size)
-    {
-        $allowed = array(
+        return [
             self::PAGE_SIZE_A3,
             self::PAGE_SIZE_A4,
-            self::PAGE_SIZE_A5,
-            self::PAGE_SIZE_LETTER,
-            self::PAGE_SIZE_LEGAL,
-        );
-        
-        if (!in_array($size, $allowed))
-        {
-            throw new Exception\InvalidPageSizeException();
-        }
-        
-        $this->config->pageSize = $size;
-        
-        return $this;
+            self::PAGE_SIZE_A5
+        ];
     }
 
     /**
-     * Sets PDF pages orientation.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - PAGE_ORIENTATION_PORTRAIT
-     * - PAGE_ORIENTATION_LANDSCAPE
-     * 
-     * @param type $orientation
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidCellWidthException
+     * @return array
      */
-    public function setPageOrientation($orientation)
+    private function getAvailableFontFamily()
     {
-        $allowed = array(
-            self::PAGE_ORIENTATION_PORTRAIT,
-            self::PAGE_ORIENTATION_LANDSCAPE,
-        );
-        
-        if (!in_array($orientation, $allowed))
-        {
-            throw new Exception\InvalidPageOrientationException();
-        }
-        
-        $this->config->pageOrientation = $orientation;
-        
-        return $this;
-    }
-    
-    /**
-     * Sets fixed width for all teble cells in PDF.
-     * Can be chained with other config set* methods.
-     * 
-     * @param integer $width
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidCellWidthException
-     */
-    public function setCellWidth($width)
-    {
-        if (!is_int($width) || $width < 1)
-        {
-            throw new Exception\InvalidCellWidthException();
-        }
-        
-        $this->config->cellWidth = $width;
-        
-        return $this;
-    }
-    
-    /**
-     * Sets fixed height for all teble cells in PDF.
-     * Can be chained with other config set* methods.
-     * 
-     * @param integer $height
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidCellHeightException
-     */
-    public function setCellHeight($height)
-    {
-        if (!is_int($height) || $height < 1)
-        {
-            throw new Exception\InvalidCellHeightException();
-        }
-        
-        $this->config->cellHeight = $height;
-        
-        return $this;
-    }
-
-    /**
-     * Sets font size for table headers and content.
-     * Can be chained with other config set* methods.
-     *  
-     * @param integer $size default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setFontSize($size)
-    {
-        return $this->setFontSizeConfig($size);
-    }
-    
-    /**
-     * Sets font size for table headers.
-     * Won't function if table headers aren't specified.
-     * Can be chained with other config set* methods.
-     *  
-     * @param integer $size default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setHeaderFontSize($size)
-    {
-        $this->setFontSizeConfig($size, self::HEADER);
-    }
-    
-    /**
-     * Sets font size for table content.
-     * Can be chained with other config set* methods.
-     *  
-     * @param integer $size default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setContentFontSize($size)
-    {
-        $this->setFontSizeConfig($size, self::CONTENT);
-    }
-    
-    /**
-     * Sets font family for table headers and content.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - FONT_FAMILY_COURIER
-     * - FONT_FAMILY_HELVETICA
-     * - FONT_FAMILY_ARIAL
-     * - FONT_FAMILY_TIMES
-     *  
-     * @param string $name default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setFontFamily($name = self::FONT_FAMILY_ARIAL)
-    {
-        return $this->setFontFamilyConfig($name);
-    }
-    
-    /**
-     * Sets font family for table headers.
-     * Won't function if table headers aren't specified.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - FONT_FAMILY_COURIER
-     * - FONT_FAMILY_HELVETICA
-     * - FONT_FAMILY_ARIAL
-     * - FONT_FAMILY_TIMES
-     *  
-     * @param string $name defaultFONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setHeaderFontFamily($name = self::FONT_FAMILY_ARIAL)
-    {
-        return $this->setFontFamilyConfig($name, self::HEADER);
-    }
-    
-    /**
-     * Sets font family for table content.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - FONT_FAMILY_COURIER
-     * - FONT_FAMILY_HELVETICA
-     * - FONT_FAMILY_ARIAL
-     * - FONT_FAMILY_TIMES
-     *  
-     * @param string $name default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setContentFontFamily($name = self::FONT_FAMILY_ARIAL)
-    {
-        return $this->setFontFamilyConfig($name, self::CONTENT);
-    }
-    
-    /**
-     * Sets font style for table headers and content.
-     * Can be chained with other config set* methods.
-     * 
-     * Available name options:
-     * - FONT_STYLE_REGULAR
-     * - FONT_STYLE_BOLD
-     * - FONT_STYLE_ITALIC
-     * - FONT_STYLE_UNDERLINE
-     *  
-     * @param string $name default FONT_STYLE_REGULAR
-     * @param string|null $target default null
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setFontStyle($name = self::FONT_STYLE_REGULAR)
-    {
-        return $this->setFontStyleConfig($name);
-    }
-    
-    /**
-     * Sets font style for table headers.
-     * Won't function if table headers aren't specified.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - FONT_STYLE_REGULAR
-     * - FONT_STYLE_BOLD
-     * - FONT_STYLE_ITALIC
-     * - FONT_STYLE_UNDERLINE
-     *  
-     * @param string $name default FONT_STYLE_REGULAR.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setHeaderFontStyle($name = self::FONT_STYLE_REGULAR)
-    {
-        return $this->setFontStyleConfig($name, self::HEADER);
-    }
-    
-    /**
-     * Sets font style for table content.
-     * Can be chained with other config set* methods.
-     * 
-     * Available options:
-     * - FONT_STYLE_REGULAR
-     * - FONT_STYLE_BOLD
-     * - FONT_STYLE_ITALIC
-     * - FONT_STYLE_UNDERLINE
-     *  
-     * @param string $name default FONT_STYLE_REGULAR.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     */
-    public function setContentFontStyle($name = self::FONT_STYLE_REGULAR)
-    {
-        return $this->setFontStyleConfig($name, self::CONTENT);
-    }
-    
-    /**
-     * Sets PDF config.
-     * 
-     * Available target options:
-     * - TABLE_HEADER
-     * - TABLE_CONTENT
-     * - null (both above)
-     * 
-     * @param string $name
-     * @param mixed $value
-     * @param string|null $target
-     */
-    private function setConfig($name, $value, $target = null)
-    {
-        switch($target){
-            
-            case self::HEADER:
-                $this->config->header->{$name} = $value;
-                break;
-            
-            case self::CONTENT:
-                $this->config->content->{$name} = $value;
-                break;
-            
-            default:
-                $this->config->{$name} = $value;
-                break;
-        }
-    }
-    
-    /**
-     * Gets value from class config.
-     * 
-     * Available target options:
-     * - TABLE_HEADER ($this->config->header)
-     * - TABLE_CONTENT ($this->config->content)
-     * - null ($this->config)
-     * 
-     * If target is provided, a property value from its config will be returned if was set.
-     * If property value was not set, the property value from main config will be returned.
-     * If a property value doesn't exist in main config PdfException will be thrown.
-     * 
-     * @param string $name Config value property name
-     * @param string|null $target Taget object to get property value from
-     * @throws Exception\InvalidConfigTypeException
-     * @throws Exception\InvalidConfigPropertyException
-     */
-    private function getConfig($name, $target = null)
-    {
-        if (!is_string($name)) {
-            throw new Exception\InvalidConfigTypeException();
-        }
-        
-        if (isset($this->config->{$target}->{$name})) {
-            
-            return $this->config->{$target}->{$name};
-            
-        } elseif (isset($this->config->{$name})) {
-            
-            return $this->config->{$name};
-            
-        } else {
-            throw new Exception\InvalidConfigPropertyException($name);
-        }
-    }
-    
-    /**
-     * Sets PDF font style.
-     * Can be chained with other config set* methods.
-     * 
-     * Available name options:
-     * - FONT_STYLE_REGULAR
-     * - FONT_STYLE_BOLD
-     * - FONT_STYLE_ITALIC
-     * - FONT_STYLE_UNDERLINE
-     * 
-     * Available target options:
-     * - TABLE_HEADER
-     * - TABLE_CONTENT
-     * - null (both above)
-     *  
-     * @param string $name default FONT_STYLE_REGULAR
-     * @param string|null $target default null
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidFontStyleException
-     */
-    private function setFontStyleConfig($name = self::FONT_STYLE_REGULAR, $target = null)
-    {
-        $allowed = array(
-            self::FONT_STYLE_BOLD,
-            self::FONT_STYLE_ITALIC,
-            self::FONT_STYLE_REGULAR,
-            self::FONT_STYLE_UNDERLINE,
-        );
-        
-        if (!in_array($name, $allowed))
-        {
-            throw new Exception\InvalidFontStyleException();
-        }
-        
-        $this->setConfig('fontStyle', $name, $target);
-        
-        return $this;
-    }
-    
-    /**
-     * Sets PDF font family.
-     * Can be chained with other config set* methods.
-     * 
-     * Available name options:
-     * - FONT_FAMILY_COURIER
-     * - FONT_FAMILY_HELVETICA
-     * - FONT_FAMILY_ARIAL
-     * - FONT_FAMILY_TIMES
-     * 
-     * Available target options:
-     * - TABLE_HEADER
-     * - TABLE_CONTENT
-     * - null (both above)
-     *  
-     * @param string $name default FONT_FAMILY_ARIAL.
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidFontFamilyException
-     */
-    private function setFontFamilyConfig($name = self::FONT_FAMILY_ARIAL, $target = null)
-    {
-        $allowed = array(
+        return [
+            self::FONT_FAMILY_DEFAULT,
+            self::FONT_FAMILY_ARIAL,
             self::FONT_FAMILY_COURIER,
             self::FONT_FAMILY_HELVETICA,
-            self::FONT_FAMILY_ARIAL,
-            self::FONT_FAMILY_TIMES,
-        );
-        
-        if (!in_array($name, $allowed))
-        {
-            throw new Exception\InvalidFontFamilyException();
-        }
-        
-        $this->setConfig('fontFamily', $name, $target);
-        
-        return $this;
-    }
-    
-    /**
-     * Sets PDF font size.
-     * Can be chained with other config set* methods.
-     * 
-     * Available target options:
-     * - TABLE_HEADER
-     * - TABLE_CONTENT
-     * - null (both above)
-     *  
-     * @param integer $size
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidFontSizeException
-     */
-    private function setFontSizeConfig($size, $target = null)
-    {
-        if (!is_int($size) || $size < 1)
-        {
-            throw new Exception\InvalidFontSizeException();
-        }
-        
-        $this->setConfig('fontSize', $size, $target);
-        
-        return $this;
+            self::FONT_FAMILY_TIMES
+        ];
     }
 }

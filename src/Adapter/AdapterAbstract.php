@@ -2,11 +2,12 @@
 /**
  * This file is part of Vegas Exporter package.
  *
- * @author Mateusz Aniołek <matty201@gmail.com>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
- * 
+ * @homepage https://github.com/vegas-cmf/exporter
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code. * 
+ * file that was distributed with this source code. *
  */
 
 namespace Vegas\Exporter\Adapter;
@@ -14,121 +15,64 @@ namespace Vegas\Exporter\Adapter;
 abstract class AdapterAbstract implements AdapterInterface
 {
     /**
-     * @var string
+     * @var \Vegas\Exporter\ExportSettings
      */
-    protected $contentType;
-    
-    /**
-     * @var string
-     */
-    protected $contentSize;
-    
-    /**
-     * @var string
-     */
-    protected $outputPath;
-    
-    /**
-     * @var string
-     */
-    protected $fileName;
-    
-    /**
-     * Data headers to use in export.
-     * 
-     * @var array
-     */
-    protected $headers = array();
-    
-    /**
-     * @param array $data
-     * @param boolean $useKeysAsHeaders
-     */
-    abstract public function init(array $data, $useKeysAsHeaders = false);
+    protected $config;
 
     /**
-     * @return mixed
+     * @param \Vegas\Exporter\ExportSettings $config
+     * @return $this
      */
-    abstract protected function download();
-
-    /**
-     * @return mixed
-     */
-    abstract protected function exportFile();
-    
-    /**
-     * Exports data into file if output path was set.
-     * Forces file download otherwise.
-     */
-    public function export()
+    public function setConfig(\Vegas\Exporter\ExportSettings $config)
     {
-        if (empty($this->outputPath)) {
-            $this->download();
-        } else {
-            $this->exportFile();
-        }
+        $this->config = $config;
+        return $this;
     }
 
     /**
-     * Sets header rows for output data.
-     * It must be used before init in order to work.
-     *
-     * @param array $headers data with header
      * @throws Exception\EmptyHeadersException
-     */
-    public function setHeaders(array $headers)
-    {
-        if (empty($headers)) {
-            throw new Exception\EmptyHeadersException();
-        }
-        
-        $this->headers = array_values($headers);
-    }
-
-    /**
-     * @param String $path
+     * @throws Exception\InvalidArgumentTypeException
      * @throws Exception\OutputPathNotWritableException
      */
-    public function setOutputPath($path)
+    public function validateOutput()
     {
-        if (!is_writable($path)) {
-             throw new Exception\OutputPathNotWritableException();
+        $headers = $this->config->getHeaders();
+        if (empty($headers)) {
+            throw new Exception\EmptyHeadersException;
         }
-        
-        $this->outputPath = $path;
+
+        if (!is_writable($this->config->getOutputDir())) {
+            throw new Exception\OutputPathNotWritableException;
+        }
+
+        if (!is_string($this->config->getFilename())) {
+            throw new Exception\InvalidArgumentTypeException;
+        }
+
+        $data = $this->config->getData();
+        if (empty($data)) {
+          throw new Exception\DataNotFoundException();
+        }
     }
-    
+
     /**
-     * Sets exported file name.
-     * 
-     * @param string $name
-     * @return \Vegas\Exporter\Adapter\Pdf
-     * @throws Exception\InvalidArgumentTypeException
+     * Retrieves raw set of data based on used headers.
+     * @param mixed $item
+     * @return array
      */
-    public function setFileName($name)
+    protected function getRawItem($item)
     {
-        if (!is_string($name)) {
-            throw new Exception\InvalidArgumentTypeException();
+        $values = [];
+        foreach ($this->config->getHeaderParams() as $header) {
+            if (is_object($item)) {
+                $values[] = $item->{$header};
+            } else if (isset($item[$header])) {
+                $values[] = $item[$header];
+            } else {
+                $values[] = null;
+            }
         }
-        
-        return $this->fileName = $name;
-    }
-    
-    /**
-     * Sets HTTP headers for file download.
-     */
-    protected function setDownloadHttpHeaders()
-    {
-        if (!is_string($this->contentType) || !is_string($this->fileName)) {
-            throw new Exception\InvalidArgumentException();
-        }
-        
-        header('Content-Type: ' . $this->contentType);
-        header('Content-Disposition: attachment; filename=' . $this->fileName);
-        
-        if (!empty($this->contentSize)) {
-            header('Content-Length: ' . $this->contentSize);
-        }
+        return $values;
     }
 }
 

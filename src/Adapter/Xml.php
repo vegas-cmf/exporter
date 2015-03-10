@@ -1,113 +1,77 @@
 <?php
-
 /**
  * This file is part of Vegas Exporter package.
  *
- * @author Mateusz Aniołek <matty201@gmail.com>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
- * 
+ * @homepage https://github.com/vegas-cmf/exporter
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code. * 
+ * file that was distributed with this source code. *
  */
 
 namespace Vegas\Exporter\Adapter;
 
+/**
+ * Class Xml
+ *
+ * Available extra settings to be provided:
+ * - rootName: name of node tree, defaults to 'root'
+ * - nodeName: name of node of each item, defaults to 'item'
+ *
+ * TODO add nesting possibility
+ * @package Vegas\Exporter\Adapter
+ */
 class Xml extends AdapterAbstract
-{    
-    /**
-     * Variable use to store SimpleXMLElement, which are set up in init() function.
-     * 
-     * @var SimpleXMLElement 
-     */
-    private $xml;
-    
-    /**
-     * Constructor. Initialize $config variable as instance of stdClass. First
-     * of all, contentSize and fileName are set as null and contentType is set to
-     * 'application/xml' so it points that exported file should be xml type
-     */
-    public function __construct()
-    {
-        $this->contentType = 'application/xml';
-        $this->fileName = 'tests/fixtures/export_file.xml';
-    }
-    
-    /**
-     * Sets data and create config object (stdClass). If keysAsHeaders are set to true,
-     * your data variable has to have header values in keys of each element. In 
-     * other case, when keysAsHeaders are set to false you have to give a header 
-     * value through setHeaders 
-     * 
-     * @param array $data
-     * @param boolean $useKeysAsHeaders default false
-     * @throws XmlException
-     */
-    public function init(array $data, $useKeysAsHeaders = false)
-    {
-        if($data === array()){
-            throw new Exception\DataNotFoundException();
-        }
+{
+    const DEFAULT_ROOT_NAME = 'root';
 
-        if($useKeysAsHeaders){
-            $this->setHeaders(array_keys($data[0]));
-        }
-        
-        $this->xml = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><root></root>');
-        
-        foreach($data as $items){
-            
-            $parent = $this->xml->addChild('item');
-            
-            foreach($items as $key => $item){
-                
-                if ($item == array()){
-                    throw new Exception\InvalidArgumentTypeException();
-                }
-                
-                if ($item != strip_tags($item)){
-                    throw new Exception\HtmlTagsFoundException();
-                }
-                
-                if($useKeysAsHeaders){
-                    $parent->addChild($key, $item);
-                } else {      
-                    if(empty($this->headers)){
-                        throw new Exception\EmptyHeadersException();
-                    }
-                    if ($this->headers[$key] != strip_tags($this->headers[$key])){
-                        throw new Exception\HtmlTagsFoundException();
-                    }
-                    $parent->addChild($this->headers[$key], $item);
-                }
-            
+    const DEFAULT_NODE_NAME = 'item';
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getContentType()
+    {
+        return 'application/xml';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getExtension()
+    {
+        return '.xml';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function output()
+    {
+        $extraSettings = $this->config->getExtraSettings();
+
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = true;
+
+        $root = isset($extraSettings['rootName']) ? $extraSettings['rootName'] : self::DEFAULT_ROOT_NAME;
+        $node = isset($extraSettings['nodeName']) ? $extraSettings['nodeName'] : self::DEFAULT_NODE_NAME;
+        $documentTree = $dom->createElement($root);
+
+        $data = $this->config->getData();
+
+        $headers = $this->config->getHeaderParams();
+        foreach ($data as $item) {
+            $item = $this->getRawItem($item);
+
+            $itemNode = $dom->createElement($node);
+            foreach ($headers as $i => $param) {
+                $itemNode->appendChild($dom->createElement($param, $item[$i]));
             }
-            
+            $documentTree->appendChild($itemNode);
         }
-        
-        $this->contentSize = strlen($this->xml->asXML());
-        
-    }
-    
-    /**
-     * Override abstract function from parent. It sets filename to previously
-     * set up instance of stdClass, and use private method saveXml()
-     * 
-     * @param string $fileName
-     * @throws ExporterException
-     */
-    protected function exportFile()
-    {
-        $this->xml->asXML($this->outputPath . $this->fileName);
-        
-    }
-    
-    /**
-     * Sends generated XML into to the browser.
-     */
-    public function download()
-    {
-        $this->setDownloadHttpHeaders();
-        
-        echo $this->xml->asXML();
+        $dom->appendChild($documentTree);
+
+        return $dom->saveXML(null, LIBXML_NOEMPTYTAG);
     }
 }

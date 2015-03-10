@@ -1,10 +1,10 @@
 <?php
 /**
- * This file is part of Vegas package
+ * This file is part of Vegas Exporter package.
  *
- * @author Krzysztof Kaplon <krzysztof@kaplon.pl>
+ * @author Radosław Fąfara <radek@amsterdam-standard.pl>
  * @copyright Amsterdam Standard Sp. Z o.o.
- * @homepage https://github.com/vegas-cmf
+ * @homepage https://github.com/vegas-cmf/exporter
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,19 +12,19 @@
 
 namespace Vegas\Exporter\Exception;
 
-use \Vegas\Exception as VegasException;
+use Vegas\Exception as VegasException;
 
 /**
- * Class InvalidMethodException
+ * Class InvalidExporterException
  * @package Vegas\Exporter\Exception
  */
-class InvalidMethodException extends VegasException
+class InvalidExporterException extends VegasException
 {
     /**
-     * @var string 
+     * @var string
      */
-    protected $message = 'Exporter method exception: ';
-    
+    protected $message = 'Exporter is invalid: ';
+
     /**
      * @param string $param
      */
