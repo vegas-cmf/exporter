@@ -7,7 +7,7 @@
  * @homepage https://github.com/vegas-cmf/exporter
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code. *
+ * file that was distributed with this source code.
  */
 
 namespace Vegas\Exporter;
@@ -30,7 +30,7 @@ class ExportSettings
     /**
      * @var bool
      */
-    protected $associativeHeaders;
+    protected $headerKeysAsParams;
 
     /**
      * @var array
@@ -61,7 +61,7 @@ class ExportSettings
     {
         $this->filename = 'export_file_' . time();
         $this->outputDir = sys_get_temp_dir();
-        $this->associativeHeaders = false;
+        $this->headerKeysAsParams = false;
     }
 
     /**
@@ -88,12 +88,12 @@ class ExportSettings
 
     /**
      * Sets whether to use header keys or values as params
-     * @param boolean $associativeHeaders
+     * @param boolean $headerKeysAsParams
      * @return $this
      */
-    public function setAssociativeHeaders($associativeHeaders)
+    public function setHeaderKeysAsParams($headerKeysAsParams)
     {
-        $this->associativeHeaders = (bool)$associativeHeaders;
+        $this->headerKeysAsParams = (bool)$headerKeysAsParams;
         return $this;
     }
 
@@ -212,7 +212,7 @@ class ExportSettings
      */
     public function getHeaderParams()
     {
-        return $this->associativeHeaders
+        return $this->headerKeysAsParams
             ? array_keys($this->headers)
             : array_values($this->headers);
     }
@@ -220,8 +220,8 @@ class ExportSettings
     /**
      * @return boolean
      */
-    public function isAssociativeHeaders()
+    public function isHeaderKeysAsParams()
     {
-        return $this->associativeHeaders;
+        return $this->headerKeysAsParams;
     }
 }

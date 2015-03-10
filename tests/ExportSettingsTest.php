@@ -123,7 +123,7 @@ class ExportSettingsTest extends TestCase
     public function testGetSetHeaderParams()
     {
         $config = new ExportSettings;
-        $this->assertFalse($config->isAssociativeHeaders());
+        $this->assertFalse($config->isHeaderKeysAsParams());
 
         $this->assertNull($config->getHeaders());
 
@@ -132,15 +132,15 @@ class ExportSettingsTest extends TestCase
         $this->assertSame(['foo', 'bar'], $config->getHeaderParams());
         $this->assertSame($config->getHeaders(), $config->getHeaderParams());
 
-        $config->setAssociativeHeaders(true);
-        $this->assertTrue($config->isAssociativeHeaders());
+        $config->setHeaderKeysAsParams(true);
+        $this->assertTrue($config->isHeaderKeysAsParams());
 
         $this->assertSame([0, 1], $config->getHeaderParams());
         $this->assertSame(['foo', 'bar'], $config->getHeaders());
 
 
         $config->setHeaders(['this' => 'is', 'associative' => 'array']);
-        $this->assertTrue($config->isAssociativeHeaders());
+        $this->assertTrue($config->isHeaderKeysAsParams());
 
         $this->assertSame(['this', 'associative'], $config->getHeaderParams());
         $this->assertSame(['this' => 'is', 'associative' => 'array'], $config->getHeaders());
