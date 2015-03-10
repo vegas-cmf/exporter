@@ -110,6 +110,7 @@ $config = (new \Vegas\Exporter\ExportSettings)
 /** @var \Phalcon\DiInterface $di */
 $exporter = $di->get('exporter');
 
+$di->get('view')->disable();    // prevent default view rendering
 $exporter->setConfig($config);
 $exporter->downloadPdf();
 ```

@@ -51,7 +51,7 @@ abstract class AdapterAbstract implements AdapterInterface
 
         $data = $this->config->getData();
         if (empty($data)) {
-          throw new Exception\DataNotFoundException();
+          throw new Exception\DataNotFoundException;
         }
     }
 
