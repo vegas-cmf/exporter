@@ -44,7 +44,7 @@ class ExporterServiceProvider implements ServiceProviderInterface
 
     public function getDependencies()
     {
-        return ['view'];
+        return [];
     }
 }
 ```
