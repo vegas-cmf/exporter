@@ -79,6 +79,22 @@ class AdapterAbstractTest extends TestCase
         }
     }
 
+    public function testEmptyDataIsNotAllowed()
+    {
+        $config = $this->createExportConfig();
+
+        $config->setData([]);
+
+        $this->adapter->setConfig($config);
+
+        try {
+            $this->adapter->validateOutput();
+            $this->fail();
+        } catch (\Exception $e) {
+            $this->assertInstanceOf('\Vegas\Exporter\Adapter\Exception\DataNotFoundException', $e);
+        }
+    }
+
     public function testOutputPathMustBeWritable()
     {
         $config = $this->createExportConfig();

@@ -49,11 +49,10 @@ abstract class AdapterAbstract implements AdapterInterface
             throw new Exception\InvalidArgumentTypeException;
         }
 
-        //$data = $this->config->getData();
-        //FIXME do we need this?
-        //if (empty($data)) {
-        //  throw new Exception\DataNotFoundException();
-        //}
+        $data = $this->config->getData();
+        if (empty($data)) {
+          throw new Exception\DataNotFoundException();
+        }
     }
 
     /**
