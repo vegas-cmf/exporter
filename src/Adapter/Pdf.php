@@ -16,7 +16,6 @@ namespace Vegas\Exporter\Adapter;
  * Class Pdf
  *
  * Available extra settings to be provided:
- * - viewParam: parameter which keeps ExportSettings object of the exporter to be used inside .volt template, defaults to 'exporter'
  * - pageOrientation: Portrait or Landscape, defaults to 'Portrait'
  * - pageSize: selected page size of output, defaults to 'A4'
  * - fontFamily: default font for for output, defaults to '' which is mPDF's default
@@ -26,11 +25,6 @@ namespace Vegas\Exporter\Adapter;
  */
 class Pdf extends AdapterAbstract
 {
-    /**
-     * Default parameter name which keeps ExportSettings object inside template
-     */
-    const VIEW_PARAM_NAME = 'exporter';
-
     const PAGE_SIZE_A3 = 'A3';
     const PAGE_SIZE_A4 = 'A4';
     const PAGE_SIZE_A5 = 'A5';
@@ -60,15 +54,6 @@ class Pdf extends AdapterAbstract
     public function getExtension()
     {
         return '.pdf';
-    }
-
-    /**
-     * @return string
-     */
-    private function getViewParamName()
-    {
-        $extraSettings = $this->config->getExtraSettings();
-        return isset($extraSettings['viewParam']) ? $extraSettings['viewParam'] : self::VIEW_PARAM_NAME;
     }
 
     /**
@@ -138,7 +123,6 @@ class Pdf extends AdapterAbstract
             throw new \Vegas\Mvc\Exception;
         }
 
-        $view->setVar($this->getViewParamName(), $this->config);
         $view->start();
         $view->render($this->config->getTemplate(), null);
         $view->finish();

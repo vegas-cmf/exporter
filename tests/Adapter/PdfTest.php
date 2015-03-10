@@ -48,26 +48,33 @@ class PdfTest extends TestCase
             ->setData($exportData);
     }
 
-    private function setUpView()
+    private function setUpDI()
     {
         $di = $this->getDI();
+
         $di->set('view', function() use ($di) {
             $view = new \Vegas\Mvc\View($di->get('config')->application->view->toArray());
             $path = $di->get('config')->application->moduleDir . 'Test/views';
             file_exists($path) && $view->setViewsDir($path);
             return $view;
         }, true);
+
+        $di->set('exporter', function() use ($di) {
+            $exporter = new \Vegas\Exporter\Exporter;
+            return $exporter->setDI($di);
+        }, true);
     }
     
     public function setUp()
     {
         parent::setUp();
-        $this->setUpView();
+        $this->setUpDI();
 
         $this->config = $this->createExportConfig();
 
         $this->adapter = new Pdf;
         $this->adapter->setConfig($this->config);
+        $this->getDI()->get('exporter')->setConfig($this->config);
     }
     
     public function tearDown()

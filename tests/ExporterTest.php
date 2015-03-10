@@ -53,23 +53,29 @@ class ExporterTest extends TestCase
             ->setData($exportData);
     }
 
-    private function setUpView()
+    private function setUpDI()
     {
         $di = $this->getDI();
+
         $di->set('view', function() use ($di) {
             $view = new \Vegas\Mvc\View($di->get('config')->application->view->toArray());
             $path = $di->get('config')->application->moduleDir . 'Test/views';
             file_exists($path) && $view->setViewsDir($path);
             return $view;
         }, true);
+
+        $di->set('exporter', function() use ($di) {
+            $exporter = new \Vegas\Exporter\Exporter;
+            return $exporter->setDI($di);
+        }, true);
     }
 
     public function setUp()
     {
         parent::setUp();
-        $this->setUpView();
-        $this->exporter = new \Vegas\Exporter\Exporter;
-        $this->exporter->setDI($this->getDI());
+        $this->setUpDI();
+
+        $this->exporter = $this->getDI()->get('exporter');
 
         foreach (['.csv', '.pdf', '.xls', '.xml'] as $ext) {
             $filePath = $this->getTestFilePath($ext);
