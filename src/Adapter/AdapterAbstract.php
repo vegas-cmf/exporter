@@ -84,13 +84,19 @@ abstract class AdapterAbstract implements AdapterInterface
     protected function getRenderedView()
     {
         try {
+            /** @var \Phalcon\Mvc\View $view */
             $view = \Phalcon\DI::getDefault()->get('view');
         } catch (\Phalcon\DI\Exception $e) {
             throw new \Vegas\Mvc\Exception;
         }
 
         $view->start();
+
+        $level = $view->getCurrentRenderLevel();
+        $view->setRenderLevel(\Phalcon\Mvc\View::LEVEL_ACTION_VIEW);
         $view->render($this->config->getTemplate(), null);
+        $view->setRenderLevel($level);
+
         $view->finish();
 
         return $view->getContent();
