@@ -74,5 +74,26 @@ abstract class AdapterAbstract implements AdapterInterface
         }
         return $values;
     }
+
+    /**
+     * Triggers the rendering process and gets result content as string.
+     * Use only for custom template exports.
+     * @return string
+     * @throws \Vegas\Mvc\Exception
+     */
+    protected function getRenderedView()
+    {
+        try {
+            $view = \Phalcon\DI::getDefault()->get('view');
+        } catch (\Phalcon\DI\Exception $e) {
+            throw new \Vegas\Mvc\Exception;
+        }
+
+        $view->start();
+        $view->render($this->config->getTemplate(), null);
+        $view->finish();
+
+        return $view->getContent();
+    }
 }
 

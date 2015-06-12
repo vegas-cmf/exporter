@@ -45,7 +45,6 @@ class ExporterTest extends TestCase
         ];
 
         return (new \Vegas\Exporter\ExportSettings)
-            ->setTemplate('export_sample')
             ->setFilename('test_export_file')
             ->setOutputDir('/tmp')
             ->setTitle('Sample file export') // optional
@@ -150,6 +149,7 @@ class ExporterTest extends TestCase
     public function testPrintAndDownloadPdf()
     {
         $config = $this->createExportConfig();
+        $config->setTemplate('export_sample');
 
         $this->exporter->setConfig($config);
 
@@ -175,6 +175,23 @@ class ExporterTest extends TestCase
 
         $this->assertNotEmpty($printBuffer);
         $this->assertNotEmpty($downloadBuffer);
+    }
+
+    public function testPrintAndDownloadTemplatedXls()
+    {
+        $config = $this->createExportConfig();
+        $config->setTemplate('export_sample');
+
+        $this->exporter->setConfig($config);
+
+        $printBuffer = $this->exporter->printXls();
+        ob_start();
+        $this->exporter->downloadXls();
+        $downloadBuffer = ob_get_clean();
+
+        $this->assertNotEmpty($printBuffer);
+        $this->assertNotEmpty($downloadBuffer);
+        $this->assertEquals($printBuffer, $downloadBuffer);
     }
 
     public function testPrintAndDownloadXml()
@@ -222,14 +239,16 @@ class ExporterTest extends TestCase
         $this->exporter->saveCsv();
         $this->assertFileExists($this->getTestFilePath('.csv'));
 
-        $this->exporter->savePdf();
-        $this->assertFileExists($this->getTestFilePath('.pdf'));
-
+        $config->setTemplate('export_sample');
         $this->exporter->saveXls();
         $this->assertFileExists($this->getTestFilePath('.xls'));
 
         $this->exporter->saveXml();
         $this->assertFileExists($this->getTestFilePath('.xml'));
+
+        $config->setTemplate('export_sample');
+        $this->exporter->savePdf();
+        $this->assertFileExists($this->getTestFilePath('.pdf'));
 
         try {
             $this->exporter->saveNothing();
