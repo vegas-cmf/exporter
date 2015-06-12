@@ -40,7 +40,7 @@ class Xls extends AdapterAbstract
     public function output()
     {
         if ($this->config->getTemplate()) {
-            return $this->getConvertedOutput($this->getRenderedView());
+            return $this->getRenderedView();
         }
 
         $data = $this->config->getData();
@@ -83,15 +83,5 @@ class Xls extends AdapterAbstract
         $writer = new \PHPExcel_Writer_Excel2007($xls);
         $writer->save('php://output');
         return ob_get_clean();
-    }
-
-    /**
-     * @param string $content UTF-8 string
-     * @return string WINDOWS-1252 encoded string
-     */
-    private function getConvertedOutput($content)
-    {
-        $encoded = iconv('UTF-8', 'WINDOWS-1252//TRANSLIT', $content);
-        return $encoded !== false ? $encoded : $content;
     }
 }

@@ -180,7 +180,7 @@ class ExporterTest extends TestCase
     public function testPrintAndDownloadTemplatedXls()
     {
         $config = $this->createExportConfig();
-        $config->setTemplate('export_sample');
+        $config->setTemplate('xls_export_sample');
 
         $this->exporter->setConfig($config);
 
@@ -239,7 +239,6 @@ class ExporterTest extends TestCase
         $this->exporter->saveCsv();
         $this->assertFileExists($this->getTestFilePath('.csv'));
 
-        $config->setTemplate('export_sample');
         $this->exporter->saveXls();
         $this->assertFileExists($this->getTestFilePath('.xls'));
 
