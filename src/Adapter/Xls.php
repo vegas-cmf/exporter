@@ -39,6 +39,10 @@ class Xls extends AdapterAbstract
      */
     public function output()
     {
+        if ($this->config->getTemplate()) {
+            return $this->getRenderedView();
+        }
+
         $data = $this->config->getData();
 
         $xls = new \PHPExcel;

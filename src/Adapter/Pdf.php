@@ -111,26 +111,6 @@ class Pdf extends AdapterAbstract
     }
 
     /**
-     * Triggers the rendering process and gets result content as string
-     * @return string
-     * @throws \Vegas\Mvc\Exception
-     */
-    private function getRenderedView()
-    {
-        try {
-            $view = \Phalcon\DI::getDefault()->get('view');
-        } catch (\Phalcon\DI\Exception $e) {
-            throw new \Vegas\Mvc\Exception;
-        }
-
-        $view->start();
-        $view->render($this->config->getTemplate(), null);
-        $view->finish();
-
-        return $view->getContent();
-    }
-
-    /**
      * Dumps PDF file to memory & retrieves content
      * @param \mPDF $mpdf
      * @return string
